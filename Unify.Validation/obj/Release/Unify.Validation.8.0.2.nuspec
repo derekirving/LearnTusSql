@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>Unify.Validation</id>
+    <version>8.0.2</version>
+    <authors>Derek Irving</authors>
+    <license type="expression">MIT</license>
+    <licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
+    <icon>icon.png</icon>
+    <readme>readme.md</readme>
+    <projectUrl>https://github.com/strathbusiness/Unify</projectUrl>
+    <description>Adds extended validation to Unify applications</description>
+    <repository type="git" url="https://github.com/strathbusiness/Unify.git" commit="01f3ef1310f3de0ef9a4b40151eb39a73cd13f39" />
+    <dependencies>
+      <group targetFramework="net8.0">
+        <dependency id="Microsoft.AspNetCore.Mvc.Abstractions" version="2.2.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Extensions.DependencyInjection.Abstractions" version="9.0.3" exclude="Build,Analyzers" />
+        <dependency id="Mime-Detective" version="25.8.1" exclude="Build,Analyzers" />
+        <dependency id="Mime-Detective.Definitions.Exhaustive" version="25.8.1" exclude="Build,Analyzers" />
+        <dependency id="System.ComponentModel.Annotations" version="5.0.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.AspNetCore.Http.Abstractions" version="2.2.0" exclude="Build,Analyzers" />
+        <dependency id="System.Text.Json" version="9.0.3" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="D:\Source\Unify\src\NugetLibraries\Unify.Validation\bin\Release\net8.0\Unify.Validation.dll" target="lib\net8.0\Unify.Validation.dll" />
+    <file src="D:\Source\Unify\src\NugetLibraries\Unify.Validation\icon.png" target="icon.png" />
+    <file src="D:\Source\Unify\src\NugetLibraries\Unify.Validation\ReadMe.md" target="ReadMe.md" />
+  </files>
+</package>
