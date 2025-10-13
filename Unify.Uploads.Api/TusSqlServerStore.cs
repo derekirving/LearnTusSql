@@ -71,13 +71,14 @@ public class TusSqlServerStore : ITusStore,
 
     public async Task<string> CreateFileAsync(long uploadLength, string metadata, CancellationToken ct)
     {
-        var fileId = Guid.NewGuid().ToString("n");
+        var appId = metadata.GetValue("appId");
+        ArgumentException.ThrowIfNullOrEmpty(appId);
+        
+        var fileId = $"{appId}-{Guid.NewGuid():n}";
         var filePath = GetFilePath(fileId);
 
         // Create empty file
-        await using (File.Create(filePath))
-        {
-        }
+        await using (File.Create(filePath));
 
         await using var conn = new SqlConnection(_connectionString);
         await conn.OpenAsync(ct);
@@ -90,7 +91,7 @@ public class TusSqlServerStore : ITusStore,
         {
             FileId = fileId,
             UploadLength = uploadLength,
-            Metadata = metadata ?? string.Empty,
+            Metadata = metadata,
             CreatedAt = DateTime.UtcNow
         });
 
@@ -323,7 +324,11 @@ public class TusSqlServerStore : ITusStore,
 
     public async Task<string> CreateFinalFileAsync(string[] partialFiles, string metadata, CancellationToken ct)
     {
-        var fileId = Guid.NewGuid().ToString("n");
+        var appId = metadata.GetValue("appId");
+        ArgumentException.ThrowIfNullOrEmpty(appId);
+        
+        var fileId = $"{appId}-{Guid.NewGuid():n}";
+        
         var filePath = GetFilePath(fileId);
 
         // Concatenate partial files
@@ -400,7 +405,7 @@ public class TusSqlServerStore : ITusStore,
     
     public async Task SetAppIdAsync(string fileId, string appId, CancellationToken ct)
     {
-        using var conn = new SqlConnection(_connectionString);
+        await using var conn = new SqlConnection(_connectionString);
     
         var sql = "UPDATE TusFiles SET AppId = @AppId WHERE FileId = @FileId";
         await conn.ExecuteAsync(sql, new { AppId = appId, FileId = fileId });
@@ -448,9 +453,9 @@ public class TusSqlServerStore : ITusStore,
         return count;
     }
     
-    public async Task<TusFileInfo> GetFileInfoAsync(string fileId, CancellationToken ct)
+    public async Task<TusFileInfo?> GetFileInfoAsync(string fileId, CancellationToken ct)
     {
-        using var conn = new SqlConnection(_connectionString);
+        await using var conn = new SqlConnection(_connectionString);
     
         var sql = @"
         SELECT 

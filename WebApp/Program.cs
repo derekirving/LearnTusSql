@@ -63,4 +63,14 @@ app.MapRazorPages();
 
 //app.UseTus(httpContext => httpContext.RequestServices.GetRequiredService<DefaultTusConfiguration>());
 
+// app.UseTus(httpContext => new DefaultTusConfiguration
+// {
+//     Store = httpContext.RequestServices.GetRequiredService<TusSqlServerStore>(),
+//     UrlPath = "/files",
+//     Events = new Events
+//     {
+//
+//     }
+// });
+
 app.Run();

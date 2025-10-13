@@ -6,32 +6,38 @@ using Unify.Uploads.Api;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var allowedOrigins = builder.Configuration.GetSection("TusSettings:AllowedOrigins").Get<string[]>();
+if (allowedOrigins == null)
+{
+    throw new Exception("No allowed origins are specified");
+}
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowClientApps", policy =>
     {
         policy
-            .WithOrigins(
-                "http://localhost:5194",
-                "https://localhost:7135"
-            )
+            .WithOrigins(allowedOrigins)
             .AllowAnyMethod()
             .AllowAnyHeader()
             .WithExposedHeaders("Upload-Offset", "Upload-Length", "Tus-Resumable", "Location");
     });
 });
 
-builder.Services.AddSingleton<TusSqlServerStore>(sp => 
+builder.Services.AddSingleton<TusSqlServerStore>(sp =>
 {
     var configuration = sp.GetRequiredService<IConfiguration>();
+
     var connectionString = configuration.GetConnectionString("TusDatabase");
-    var uploadDirectory = configuration["TusSettings:UploadDirectory"] 
-                          ?? Path.Combine(Directory.GetCurrentDirectory(), "tusfiles");
-    
-    return new TusSqlServerStore(connectionString!, uploadDirectory);
+    ArgumentException.ThrowIfNullOrEmpty(connectionString);
+
+    var uploadsDirectory = configuration["TusSettings:UploadDirectory"];
+    ArgumentException.ThrowIfNullOrEmpty(uploadsDirectory);
+
+    return new TusSqlServerStore(connectionString, uploadsDirectory);
 });
 
-builder.Services.AddHostedService<TusCleanupService>();
+//builder.Services.AddHostedService<TusCleanupService>();
 
 var app = builder.Build();
 
@@ -47,7 +53,7 @@ app.UseTus(httpContext => new DefaultTusConfiguration
         {
             var file = await eventContext.GetFileAsync();
             var metadata = await file.GetMetadataAsync(eventContext.CancellationToken);
-            
+
             // Extract session ID and app ID from metadata
             if (metadata.TryGetValue("sessionId", out var sessionIdMetadata))
             {
@@ -62,7 +68,7 @@ app.UseTus(httpContext => new DefaultTusConfiguration
                 var store = eventContext.Store as TusSqlServerStore;
                 await store.SetAppIdAsync(file.Id, appId, eventContext.CancellationToken);
             }
-            
+
             var logger = eventContext.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
             logger.LogInformation($"File {file.Id} upload completed!");
         },
@@ -87,111 +93,111 @@ app.UseTus(httpContext => new DefaultTusConfiguration
 
 // Get file info
 app.MapGet("/api/files/{fileId}", async (
-    string fileId,
-    TusSqlServerStore store,
-    CancellationToken ct) =>
-{
-    var exists = await store.FileExistAsync(fileId, ct);
-    if (!exists)
-        return Results.NotFound();
+        string fileId,
+        TusSqlServerStore store,
+        CancellationToken ct) =>
+    {
+        var exists = await store.FileExistAsync(fileId, ct);
+        if (!exists)
+            return Results.NotFound();
 
-    var file = await store.GetFileInfoAsync(fileId, ct);
-    return Results.Ok(file);
-})
-.WithName("GetFileInfo");
+        var file = await store.GetFileInfoAsync(fileId, ct);
+        return Results.Ok(file);
+    })
+    .WithName("GetFileInfo");
 
 // Associate file with session
 app.MapPost("/api/files/{fileId}/associate", async (
-    string fileId,
-    [FromBody] AssociateRequest request,
-    TusSqlServerStore store,
-    CancellationToken ct) =>
-{
-    var exists = await store.FileExistAsync(fileId, ct);
-    if (!exists)
-        return Results.NotFound();
-
-    await store.AssociateFileWithSessionAsync(fileId, request.SessionId, ct);
-    
-    if (!string.IsNullOrEmpty(request.AppId))
+        string fileId,
+        [FromBody] AssociateRequest request,
+        TusSqlServerStore store,
+        CancellationToken ct) =>
     {
-        await store.SetAppIdAsync(fileId, request.AppId, ct);
-    }
+        var exists = await store.FileExistAsync(fileId, ct);
+        if (!exists)
+            return Results.NotFound();
 
-    return Results.Ok();
-})
-.WithName("AssociateFile");
+        await store.AssociateFileWithSessionAsync(fileId, request.SessionId, ct);
+
+        if (!string.IsNullOrEmpty(request.AppId))
+        {
+            await store.SetAppIdAsync(fileId, request.AppId, ct);
+        }
+
+        return Results.Ok();
+    })
+    .WithName("AssociateFile");
 
 // Commit file (mark as permanent)
 app.MapPost("/api/files/{fileId}/commit", async (
-    string fileId,
-    TusSqlServerStore store,
-    CancellationToken ct) =>
-{
-    var exists = await store.FileExistAsync(fileId, ct);
-    if (!exists)
-        return Results.NotFound();
+        string fileId,
+        TusSqlServerStore store,
+        CancellationToken ct) =>
+    {
+        var exists = await store.FileExistAsync(fileId, ct);
+        if (!exists)
+            return Results.NotFound();
 
-    await store.CommitFileAsync(fileId, ct);
-    return Results.Ok();
-})
-.WithName("CommitFile");
+        await store.CommitFileAsync(fileId, ct);
+        return Results.Ok();
+    })
+    .WithName("CommitFile");
 
 // Get files by session
 app.MapGet("/api/sessions/{sessionId}/files", async (
-    string sessionId,
-    TusSqlServerStore store,
-    CancellationToken ct) =>
-{
-    var files = await store.GetFilesBySessionAsync(sessionId, ct);
-    return Results.Ok(files);
-})
-.WithName("GetFilesBySession") ;
+        string sessionId,
+        TusSqlServerStore store,
+        CancellationToken ct) =>
+    {
+        var files = await store.GetFilesBySessionAsync(sessionId, ct);
+        return Results.Ok(files);
+    })
+    .WithName("GetFilesBySession");
 
 // Download file
 app.MapGet("/api/files/{fileId}/download", async (
-    string fileId,
-    TusSqlServerStore store,
-    CancellationToken ct) =>
-{
-    var exists = await store.FileExistAsync(fileId, ct);
-    if (!exists)
-        return Results.NotFound();
-
-    var file = await store.GetFileAsync(fileId, ct);
-    var stream = await file.GetContentAsync(ct);
-    var metadata = await file.GetMetadataAsync(ct);
-    
-    var filename = "download";
-    if (metadata.TryGetValue("filename", out var filenameMetadata))
+        string fileId,
+        TusSqlServerStore store,
+        CancellationToken ct) =>
     {
-        filename = filenameMetadata.GetString(System.Text.Encoding.UTF8);
-    }
+        var exists = await store.FileExistAsync(fileId, ct);
+        if (!exists)
+            return Results.NotFound();
 
-    var contentType = "application/octet-stream";
-    if (metadata.TryGetValue("filetype", out var filetypeMetadata))
-    {
-        contentType = filetypeMetadata.GetString(System.Text.Encoding.UTF8);
-    }
+        var file = await store.GetFileAsync(fileId, ct);
+        var stream = await file.GetContentAsync(ct);
+        var metadata = await file.GetMetadataAsync(ct);
 
-    return Results.File(stream, contentType, filename);
-})
-.WithName("DownloadFile") ;
+        var filename = "download";
+        if (metadata.TryGetValue("filename", out var filenameMetadata))
+        {
+            filename = filenameMetadata.GetString(System.Text.Encoding.UTF8);
+        }
+
+        var contentType = "application/octet-stream";
+        if (metadata.TryGetValue("filetype", out var filetypeMetadata))
+        {
+            contentType = filetypeMetadata.GetString(System.Text.Encoding.UTF8);
+        }
+
+        return Results.File(stream, contentType, filename);
+    })
+    .WithName("DownloadFile");
 
 // Delete file
 app.MapDelete("/api/files/{fileId}", async (
-    string fileId,
-    TusSqlServerStore store,
-    CancellationToken ct) =>
-{
-    var exists = await store.FileExistAsync(fileId, ct);
-    if (!exists)
-        return Results.NotFound();
+        string fileId,
+        TusSqlServerStore store,
+        CancellationToken ct) =>
+    {
+        var exists = await store.FileExistAsync(fileId, ct);
+        if (!exists)
+            return Results.NotFound();
 
-    await store.DeleteFileAsync(fileId, ct);
-    return Results.NoContent();
-})
-.WithName("DeleteFile");
+        await store.DeleteFileAsync(fileId, ct);
+        return Results.NoContent();
+    })
+    .WithName("DeleteFile");
 
 // Health check
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }))
