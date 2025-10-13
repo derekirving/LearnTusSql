@@ -1,0 +1,56 @@
+@page
+@model WebApp.Pages.OldIndex
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html lang="en" class="no-js">
+<head>
+    <title></title>
+    <link rel="stylesheet" href="~/style.css" />
+</head>
+<body>
+<div>
+    
+    <form method="post" hx-post hx-target="this" hx-swap="outerHTML" class="submit-after-unify-uploads" enctype="multipart/form-data" novalidate>
+        <div class="mb-3">
+            <label asp-for="Post!.PostTitle" class="form-label"></label>
+            <input type="text" class="form-control" asp-for="Post!.PostTitle"/>
+            <span asp-validation-for="Post!.PostTitle" class="text-danger"></span>
+        </div>
+    
+        <p data-for="MyUploadZone">Upload assignment files</p>
+    
+        <div asp-validation-summary="ModelOnly"></div>
+    
+        <unify-web-upload class="mt-3 mb-3" zone="MyUploadZone" files="@Model.Post?.Files" asp-page="Index" asp-page-delete-handler="Delete" asp-route-postId="5">
+            <p><i class="fa fa-cog fa-spin"></i> <strong>Doing</strong> a submit</p>
+        </unify-web-upload>
+    
+        <input type="hidden" asp-for="Post!.PostId"/>
+        <input class="btn btn-primary" type="submit"/>
+    </form>
+
+</div>
+
+@* <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.7/dist/htmx.min.js"></script> *@
+
+<script src="~/tus.js"></script>
+<script src="~/index.js"></script>
+<script>
+        document.addEventListener("unify-upload-files-changed", (e) => {
+            console.log("Files changed", e);
+        })
+        document.addEventListener("unify-upload-success", (e) => {
+            console.log("Upload Success", e);
+        })
+        document.addEventListener("unify-upload-form-submitting", (e) => {
+            console.log("Submitting...", e);
+        })
+    </script>
+
+</body>
+</html>

@@ -1,15 +1,30 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using WebApp.Data;
-
 namespace WebApp.Pages;
 
-public class Index : PageModel
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using Unify.Web.Ui.Component.Upload;
+
+public class Index(IConfiguration configuration, TusApiClient tusApiClient) : PageModel
 {
-    [BindProperty(SupportsGet = true)] public Post? Post { get; set; }
+    public string TusApiUrl = configuration["Unify:Uploads:BaseUrl"]!;
+    public string AppId = configuration["Unify:Uploads:AppId"]!;
+    public string? ClientVersion;
+    
+    [BindProperty]
+    public string UploadedFileId { get; set; }
+
+    [BindProperty]
+    public string FormSessionId { get; set; }
     
     public void OnGet()
     {
-        
+        FormSessionId = Guid.NewGuid().ToString("n");
+        ClientVersion = tusApiClient.Version;
+    }
+
+    public async Task<IActionResult> OnPostAsync()
+    {
+        var committed = await tusApiClient.CommitFileAsync(UploadedFileId);
+        return RedirectToPage();
     }
 }

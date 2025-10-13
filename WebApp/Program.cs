@@ -9,12 +9,15 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorPages();
 
-builder.Services.AddHttpClient<TusApiClient>(client =>
-{
-    var tusApiBaseUrl = builder.Configuration["TusApi:BaseUrl"] ?? "https://localhost:7000";
-    client.BaseAddress = new Uri(tusApiBaseUrl);
-    client.Timeout = TimeSpan.FromMinutes(30); // Long timeout for large uploads
-});
+builder.AddUnifyUploads();
+
+// builder.Services.AddHttpClient<TusApiClient>(client =>
+// {
+//     var baseUrl = builder.Configuration["Unify:Uploads:BaseUrl"];
+//     ArgumentException.ThrowIfNullOrEmpty(baseUrl);
+//     client.BaseAddress = new Uri(baseUrl);
+//     client.Timeout = TimeSpan.FromMinutes(30); // Long timeout for large uploads
+// });
 
 // builder.Services.AddSingleton<TusDiskStorageOptionHelper>();
 
