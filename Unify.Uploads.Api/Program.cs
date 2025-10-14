@@ -1,10 +1,13 @@
 using tusdotnet;
 using Unify;
+using Unify.Encryption;
 using Unify.Uploads.Api;
 using Unify.Uploads.Api.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddUnifyConfiguration();
+
+builder.Services.AddUnifyEncryption();
 
 var allowedOrigins = builder.Configuration.GetSection("TusSettings:AllowedOrigins").Get<string[]>();
 if (allowedOrigins == null)
@@ -29,6 +32,7 @@ builder.Services.AddSingleton<ITusConfigurationFactory, TusConfigurationFactory>
 builder.Services.AddSingleton<TusSqlServerStore>(sp =>
 {
     var configuration = sp.GetRequiredService<IConfiguration>();
+    var encryption = sp.GetRequiredService<IUnifyEncryption>();
 
     var connectionString = configuration.GetConnectionString("TusDatabase");
     ArgumentException.ThrowIfNullOrEmpty(connectionString);
@@ -36,7 +40,7 @@ builder.Services.AddSingleton<TusSqlServerStore>(sp =>
     var uploadsDirectory = configuration["TusSettings:UploadDirectory"];
     ArgumentException.ThrowIfNullOrEmpty(uploadsDirectory);
 
-    return new TusSqlServerStore(connectionString, uploadsDirectory);
+    return new TusSqlServerStore(configuration, encryption, connectionString, uploadsDirectory);
 });
 
 builder.Services.AddHostedService<TusCleanupService>();

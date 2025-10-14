@@ -7,7 +7,6 @@ using Unify.Web.Ui.Component.Upload;
 public class Index(IConfiguration configuration, TusApiClient tusApiClient) : PageModel
 {
     public string TusApiUrl = configuration["Unify:Uploads:BaseUrl"]!;
-    public string AppId = configuration["Unify:Uploads:AppId"]!;
     public string? ClientVersion;
 
     [BindProperty] public List<string> UploadedFileId { get; set; } = [];

@@ -1,6 +1,7 @@
 @page
+@using Unify.Web.Ui.Component.Upload
 @model WebApp.Pages.Index
-
+@inject Microsoft.Extensions.Options.IOptions<UnifyUploadOptions> UploadOpts
 @{
     Layout = null;
 }
@@ -71,7 +72,7 @@
                     filename: file.name,
                     filetype: file.type,
                     sessionId: formSessionIdInput.value,
-                    appId: '@Model.AppId',
+                    appId: '@UploadOpts.Value.EncryptedAppId',
                     zoneId: 'Zone1'
                 },
                 onError: function(error) {
@@ -95,23 +96,6 @@
                     
                     // Store the file ID in hidden field
                     uploadedFileIdInput.value = fileId;
-                    
-                    // Associate file with session on centralized API
-                    // fetch(tusApiUrl + '/api/files/' + fileId + '/associate', {
-                    //     method: 'POST',
-                    //     headers: {
-                    //         'Content-Type': 'application/json'
-                    //     },
-                    //     body: JSON.stringify({
-                    //         sessionId: formSessionIdInput.value,
-                    //         appId: '@Model.AppId'
-                    //     })
-                    // }).then(response => {
-                    //     if (response.ok) {
-                    //         console.log('File associated with session');
-                    //     }
-                    // });
-                    
                     submitBtn.disabled = false;
                 }
             });

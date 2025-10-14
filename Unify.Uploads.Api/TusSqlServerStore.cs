@@ -3,6 +3,7 @@ using Dapper;
 using Microsoft.Data.SqlClient;
 using tusdotnet.Interfaces;
 using tusdotnet.Models.Concatenation;
+using Unify.Encryption;
 
 namespace Unify.Uploads.Api;
 
@@ -15,11 +16,15 @@ public class TusSqlServerStore : ITusStore,
     ITusChecksumStore,
     ITusCreationDeferLengthStore
 {
+    private readonly IConfiguration _configuration;
+    private readonly IUnifyEncryption _encryption;
     private readonly string _connectionString;
     private readonly string _uploadDirectory;
-
-    public TusSqlServerStore(string connectionString, string uploadDirectory)
+    
+    public TusSqlServerStore(IConfiguration configuration, IUnifyEncryption encryption, string connectionString, string uploadDirectory)
     {
+        _configuration = configuration;
+        _encryption = encryption;
         _connectionString = connectionString;
         _uploadDirectory = uploadDirectory;
 
@@ -75,13 +80,18 @@ public class TusSqlServerStore : ITusStore,
 
     public async Task<string> CreateFileAsync(long uploadLength, string metadata, CancellationToken ct)
     {
-        var appId = metadata.GetValue("appId");
-        ArgumentException.ThrowIfNullOrEmpty(appId);
+        var secret = _configuration["Unify:Secret"];
+        ArgumentException.ThrowIfNullOrEmpty(secret);
+        
+        var encryptedAppId = metadata.GetValue("appId");
+        ArgumentException.ThrowIfNullOrEmpty(encryptedAppId);
+        
+        var appId = _encryption.Decrypt(encryptedAppId, secret);
 
         var zoneId = metadata.GetValue("zoneId");
         ArgumentException.ThrowIfNullOrEmpty(zoneId);
         
-        var fileId =Guid.NewGuid().ToString("N");
+        var fileId = Guid.NewGuid().ToString("N");
         
         var filePath = GetFilePath(fileId);
 
