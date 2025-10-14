@@ -7,13 +7,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Dapper" Version="2.1.66"/>
-        <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.1"/>
-        <PackageReference Include="Microsoft.Data.Sqlite" Version="6.0.5"/>
-        <PackageReference Include="tusdotnet" Version="2.10.0"/>
+        <PackageReference Include="Dapper" />
+        <PackageReference Include="Microsoft.Data.SqlClient"/>
+        <PackageReference Include="Microsoft.Data.Sqlite" />
+        <PackageReference Include="tusdotnet" />
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\Unify.Encryption\Unify.Encryption.csproj" />
         <ProjectReference Include="..\Unify.Validation\Unify.Validation.csproj"/>
     </ItemGroup>
 

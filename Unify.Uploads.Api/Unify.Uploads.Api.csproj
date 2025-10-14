@@ -1,16 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Dapper" Version="2.1.66"/>
-        <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.1"/>
+        <PackageReference Include="Dapper" />
+        <PackageReference Include="Microsoft.Data.SqlClient" />
 <!--        <PackageReference Include="Microsoft.Data.Sqlite" Version="6.0.5"/>-->
-        <PackageReference Include="tusdotnet" Version="2.10.0"/>
+        <PackageReference Include="tusdotnet" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Unify\Unify.csproj" />
     </ItemGroup>
 
 </Project>

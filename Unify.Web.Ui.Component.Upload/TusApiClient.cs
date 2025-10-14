@@ -26,14 +26,22 @@ public class TusApiClient
         return response.IsSuccessStatusCode;
     }
 
-    public async Task<bool> CommitFileAsync(string fileId, CancellationToken ct = default)
+    public async Task<List<CommitedUploadResult>> CommitFilesAsync(List<string> fileIds, CancellationToken ct = default)
     {
-        var response = await _httpClient.PostAsync(
-            $"/api/files/{fileId}/commit",
-            null,
-            ct);
+        var list = new  List<CommitedUploadResult>();
+        
+        foreach (var fileId in fileIds)
+        {
+            var response = await _httpClient.PostAsync(
+                $"/api/files/{fileId}/commit",
+                null,
+                ct);
+            
+            list.Add(new CommitedUploadResult(fileId, response.IsSuccessStatusCode, response.ReasonPhrase));
+            
+        }
 
-        return response.IsSuccessStatusCode;
+        return list;
     }
 
     public async Task<List<string>> GetFilesBySessionAsync(string sessionId, CancellationToken ct = default)

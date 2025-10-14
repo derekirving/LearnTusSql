@@ -9,9 +9,8 @@ public class Index(IConfiguration configuration, TusApiClient tusApiClient) : Pa
     public string TusApiUrl = configuration["Unify:Uploads:BaseUrl"]!;
     public string AppId = configuration["Unify:Uploads:AppId"]!;
     public string? ClientVersion;
-    
-    [BindProperty]
-    public string UploadedFileId { get; set; }
+
+    [BindProperty] public List<string> UploadedFileId { get; set; } = [];
 
     [BindProperty]
     public string FormSessionId { get; set; }
@@ -24,7 +23,7 @@ public class Index(IConfiguration configuration, TusApiClient tusApiClient) : Pa
 
     public async Task<IActionResult> OnPostAsync()
     {
-        var committed = await tusApiClient.CommitFileAsync(UploadedFileId);
+        var uploadResults = await tusApiClient.CommitFilesAsync(UploadedFileId);
         return RedirectToPage();
     }
 }

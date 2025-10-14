@@ -1,0 +1,26 @@
+﻿<configuration>
+	<appSettings>
+		<add key="ApplicationId" value="[INSERT_UNIQUE_NAME]"/>
+		<add key="RoleGroups" value="SBS.Faculty.IT" />
+	</appSettings>
+	<system.webServer>
+		<rewrite>
+			<outboundRules rewriteBeforeCache="true">
+				<rule name="UnifyProxy" stopProcessing="true" preCondition="UnifyProxyResponse" enabled="true">
+					<match filterByTags="A, Area, Base, Form, Frame, Head, IFrame,Input" pattern="^/(.*[^/]|)$" />
+					<action type="Rewrite" value="{HTTP_X-Forwarded-UnifyPathBase}/{R:1}" />
+				</rule>
+				<rule name="UnifyProxyAssets" preCondition="UnifyProxyResponse" enabled="true">
+					<match filterByTags="Img, Link, Script" pattern="^/(.*)" />
+					<action type="Rewrite" value="{HTTP_X-Forwarded-UnifyPathBase}{R:0}" />
+				</rule>
+				<preConditions>
+					<preCondition name="UnifyProxyResponse">
+						<add input="{RESPONSE_CONTENT_TYPE}" pattern="^(text/html|text/plain|text/xml|application/rss\+xml)" />
+						<add input="{HTTP_X-Forwarded-UnifyPathBase}" pattern=".+" />
+					</preCondition>
+				</preConditions>
+			</outboundRules>
+		</rewrite>
+	</system.webServer>
+</configuration>

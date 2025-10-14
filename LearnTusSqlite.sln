@@ -13,9 +13,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionIt
 	ProjectSection(SolutionItems) = preProject
 		database.sql = database.sql
 		docker-compose.yml = docker-compose.yml
+		Directory.Packages.props = Directory.Packages.props
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unify.Uploads.Api", "Unify.Uploads.Api\Unify.Uploads.Api.csproj", "{BA418489-DAA8-4510-A1AA-44198E320F56}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unify", "Unify\Unify.csproj", "{505B9758-40D2-4900-A6A3-FF725EDC35BE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unify.Encryption", "Unify.Encryption\Unify.Encryption.csproj", "{FF84F319-70A0-4DEC-BEB8-F2657E3C5E34}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -75,6 +80,30 @@ Global
 		{BA418489-DAA8-4510-A1AA-44198E320F56}.Release|x64.Build.0 = Release|Any CPU
 		{BA418489-DAA8-4510-A1AA-44198E320F56}.Release|x86.ActiveCfg = Release|Any CPU
 		{BA418489-DAA8-4510-A1AA-44198E320F56}.Release|x86.Build.0 = Release|Any CPU
+		{505B9758-40D2-4900-A6A3-FF725EDC35BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{505B9758-40D2-4900-A6A3-FF725EDC35BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{505B9758-40D2-4900-A6A3-FF725EDC35BE}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{505B9758-40D2-4900-A6A3-FF725EDC35BE}.Debug|x64.Build.0 = Debug|Any CPU
+		{505B9758-40D2-4900-A6A3-FF725EDC35BE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{505B9758-40D2-4900-A6A3-FF725EDC35BE}.Debug|x86.Build.0 = Debug|Any CPU
+		{505B9758-40D2-4900-A6A3-FF725EDC35BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{505B9758-40D2-4900-A6A3-FF725EDC35BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{505B9758-40D2-4900-A6A3-FF725EDC35BE}.Release|x64.ActiveCfg = Release|Any CPU
+		{505B9758-40D2-4900-A6A3-FF725EDC35BE}.Release|x64.Build.0 = Release|Any CPU
+		{505B9758-40D2-4900-A6A3-FF725EDC35BE}.Release|x86.ActiveCfg = Release|Any CPU
+		{505B9758-40D2-4900-A6A3-FF725EDC35BE}.Release|x86.Build.0 = Release|Any CPU
+		{FF84F319-70A0-4DEC-BEB8-F2657E3C5E34}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF84F319-70A0-4DEC-BEB8-F2657E3C5E34}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF84F319-70A0-4DEC-BEB8-F2657E3C5E34}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{FF84F319-70A0-4DEC-BEB8-F2657E3C5E34}.Debug|x64.Build.0 = Debug|Any CPU
+		{FF84F319-70A0-4DEC-BEB8-F2657E3C5E34}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FF84F319-70A0-4DEC-BEB8-F2657E3C5E34}.Debug|x86.Build.0 = Debug|Any CPU
+		{FF84F319-70A0-4DEC-BEB8-F2657E3C5E34}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF84F319-70A0-4DEC-BEB8-F2657E3C5E34}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FF84F319-70A0-4DEC-BEB8-F2657E3C5E34}.Release|x64.ActiveCfg = Release|Any CPU
+		{FF84F319-70A0-4DEC-BEB8-F2657E3C5E34}.Release|x64.Build.0 = Release|Any CPU
+		{FF84F319-70A0-4DEC-BEB8-F2657E3C5E34}.Release|x86.ActiveCfg = Release|Any CPU
+		{FF84F319-70A0-4DEC-BEB8-F2657E3C5E34}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

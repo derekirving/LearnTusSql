@@ -7,11 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Abstractions" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.3" />
-    <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
-    <PackageReference Include="Mime-Detective" Version="25.8.1" />
-    <PackageReference Include="Mime-Detective.Definitions.Exhaustive" Version="25.8.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="System.ComponentModel.Annotations"  />
+    <PackageReference Include="Mime-Detective"  />
+    <PackageReference Include="Mime-Detective.Definitions.Exhaustive"  />
   </ItemGroup>
 
 </Project>

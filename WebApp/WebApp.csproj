@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Unify.Web.Ui.Component.Upload\Unify.Web.Ui.Component.Upload.csproj" />
+    <ProjectReference Include="..\Unify\Unify.csproj" />
   </ItemGroup>
 
 </Project>

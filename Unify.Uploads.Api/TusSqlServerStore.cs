@@ -36,33 +36,37 @@ public class TusSqlServerStore : ITusStore,
         await using var conn = new SqlConnection(_connectionString);
         await conn.OpenAsync();
     
-        var sql = @"
-        IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'TusFiles')
-        BEGIN
-            CREATE TABLE TusFiles (
-                FileId NVARCHAR(50) PRIMARY KEY,
-                UploadLength BIGINT NULL,
-                UploadOffset BIGINT NOT NULL DEFAULT 0,
-                Metadata NVARCHAR(MAX) NULL,
-                CreatedAt DATETIME2 NOT NULL,
-                ExpiresAt DATETIME2 NULL,
-                UploadConcat NVARCHAR(20) NULL,
-                PartialUploads NVARCHAR(MAX) NULL,
-                SessionId NVARCHAR(50) NULL,
-                AppId NVARCHAR(50) NULL,
-                IsCommitted BIT NOT NULL DEFAULT 0
-            );
+        const string sql = """
 
-            CREATE INDEX IX_TusFiles_ExpiresAt ON TusFiles(ExpiresAt) WHERE ExpiresAt IS NOT NULL;
-            CREATE INDEX IX_TusFiles_SessionId ON TusFiles(SessionId, IsCommitted) WHERE SessionId IS NOT NULL;
-            CREATE INDEX IX_TusFiles_AppId ON TusFiles(AppId) WHERE AppId IS NOT NULL;
-            CREATE INDEX IX_TusFiles_Uncommitted ON TusFiles(CreatedAt) WHERE IsCommitted = 0;
-        END
-        ELSE IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('TusFiles') AND name = 'AppId')
-        BEGIN
-            ALTER TABLE TusFiles ADD AppId NVARCHAR(50) NULL;
-            CREATE INDEX IX_TusFiles_AppId ON TusFiles(AppId) WHERE AppId IS NOT NULL;
-        END";
+                                   IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'TusFiles')
+                                   BEGIN
+                                       CREATE TABLE TusFiles (
+                                           FileId NVARCHAR(50) PRIMARY KEY,
+                                           UploadLength BIGINT NULL,
+                                           UploadOffset BIGINT NOT NULL DEFAULT 0,
+                                           Metadata NVARCHAR(MAX) NULL,
+                                           CreatedAt DATETIME2 NOT NULL,
+                                           ExpiresAt DATETIME2 NULL,
+                                           UploadConcat NVARCHAR(20) NULL,
+                                           PartialUploads NVARCHAR(MAX) NULL,
+                                           SessionId NVARCHAR(50) NULL,
+                                           ZoneId NVARCHAR(50) NULL,
+                                           AppId NVARCHAR(50) NULL,
+                                           IsCommitted BIT NOT NULL DEFAULT 0
+                                       );
+
+                                       CREATE INDEX IX_TusFiles_ExpiresAt ON TusFiles(ExpiresAt) WHERE ExpiresAt IS NOT NULL;
+                                       CREATE INDEX IX_TusFiles_SessionId ON TusFiles(SessionId, IsCommitted) WHERE SessionId IS NOT NULL;
+                                       CREATE INDEX IX_TusFiles_ZoneId ON TusFiles(ZoneId, IsCommitted) WHERE ZoneId IS NOT NULL;
+                                       CREATE INDEX IX_TusFiles_AppId ON TusFiles(AppId) WHERE AppId IS NOT NULL;
+                                       CREATE INDEX IX_TusFiles_Uncommitted ON TusFiles(CreatedAt) WHERE IsCommitted = 0;
+                                   END
+                                   ELSE IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('TusFiles') AND name = 'AppId')
+                                   BEGIN
+                                       ALTER TABLE TusFiles ADD AppId NVARCHAR(50) NULL;
+                                       CREATE INDEX IX_TusFiles_AppId ON TusFiles(AppId) WHERE AppId IS NOT NULL;
+                                   END
+                           """;
     
         await conn.ExecuteAsync(sql);
     }
@@ -73,23 +77,32 @@ public class TusSqlServerStore : ITusStore,
     {
         var appId = metadata.GetValue("appId");
         ArgumentException.ThrowIfNullOrEmpty(appId);
+
+        var zoneId = metadata.GetValue("zoneId");
+        ArgumentException.ThrowIfNullOrEmpty(zoneId);
         
-        var fileId = $"{appId}-{Guid.NewGuid():n}";
+        var fileId =Guid.NewGuid().ToString("N");
+        
         var filePath = GetFilePath(fileId);
 
         // Create empty file
-        await using (File.Create(filePath));
+        await using (File.Create(filePath))
+        {
+            
+        }
 
         await using var conn = new SqlConnection(_connectionString);
         await conn.OpenAsync(ct);
 
         var sql = @"
-            INSERT INTO TusFiles (FileId, UploadLength, UploadOffset, Metadata, CreatedAt)
-            VALUES (@FileId, @UploadLength, 0, @Metadata, @CreatedAt)";
+            INSERT INTO TusFiles (FileId, ZoneId, AppId, UploadLength, UploadOffset, Metadata, CreatedAt)
+            VALUES (@FileId, @ZoneId, @AppId, @UploadLength, 0, @Metadata, @CreatedAt)";
 
         await conn.ExecuteAsync(sql, new
         {
             FileId = fileId,
+            ZoneId = zoneId,
+            AppId = appId,
             UploadLength = uploadLength,
             Metadata = metadata,
             CreatedAt = DateTime.UtcNow
@@ -327,7 +340,10 @@ public class TusSqlServerStore : ITusStore,
         var appId = metadata.GetValue("appId");
         ArgumentException.ThrowIfNullOrEmpty(appId);
         
-        var fileId = $"{appId}-{Guid.NewGuid():n}";
+        var zoneId = metadata.GetValue("zoneId");
+        ArgumentException.ThrowIfNullOrEmpty(zoneId);
+        
+        var fileId = Guid.NewGuid().ToString("N");
         
         var filePath = GetFilePath(fileId);
 
@@ -350,15 +366,17 @@ public class TusSqlServerStore : ITusStore,
         await using var conn = new SqlConnection(_connectionString);
 
         var sql = @"
-            INSERT INTO TusFiles (FileId, UploadLength, UploadOffset, Metadata, CreatedAt, PartialUploads)
-            VALUES (@FileId, @UploadLength, @UploadOffset, @Metadata, @CreatedAt, @PartialUploads)";
+            INSERT INTO TusFiles (FileId, ZoneId, AppId, UploadLength, UploadOffset, Metadata, CreatedAt, PartialUploads)
+            VALUES (@FileId, @ZoneId, @AppId, @UploadLength, @UploadOffset, @Metadata, @CreatedAt, @PartialUploads)";
 
         await conn.ExecuteAsync(sql, new
         {
             FileId = fileId,
+            ZoneId = zoneId,
+            AppId = appId,
             UploadLength = totalLength,
             UploadOffset = totalLength,
-            Metadata = metadata ?? string.Empty,
+            Metadata = metadata,
             CreatedAt = DateTime.UtcNow,
             PartialUploads = string.Join(",", partialFiles)
         });
