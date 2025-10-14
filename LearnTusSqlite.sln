@@ -22,6 +22,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unify", "Unify\Unify.csproj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unify.Encryption", "Unify.Encryption\Unify.Encryption.csproj", "{FF84F319-70A0-4DEC-BEB8-F2657E3C5E34}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UnifyRefs", "UnifyRefs", "{9359DB20-0C9C-4609-BEFC-C360C7F520A7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -107,5 +109,10 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{505B9758-40D2-4900-A6A3-FF725EDC35BE} = {9359DB20-0C9C-4609-BEFC-C360C7F520A7}
+		{FF84F319-70A0-4DEC-BEB8-F2657E3C5E34} = {9359DB20-0C9C-4609-BEFC-C360C7F520A7}
+		{4FDF97B1-6265-4BF5-8D07-E89BBFB650C4} = {9359DB20-0C9C-4609-BEFC-C360C7F520A7}
 	EndGlobalSection
 EndGlobal
