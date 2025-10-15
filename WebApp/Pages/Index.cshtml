@@ -10,11 +10,13 @@
 
 <html>
 <head>
-    <title></title>
+    <title>Uploads</title>
+    <link rel="stylesheet" href="~/cmpnt/upload.css" />
 </head>
 <body>
 <div>
     <p>Version @Model.ClientVersion</p>
+    <unify-web-upload/>
     <form method="post">
 
         <div class="mb-3">
@@ -29,11 +31,11 @@
             </div>
 
             <div id="uploadStatus" class="mt-2"></div>
-            
+
         </div>
 
         <input type="hidden" asp-for="FormSessionId"/>
-        
+
         <input type="hidden" id="tusApiUrl" value="@Model.TusApiUrl"/>
 
         <input type="hidden" id="UploadedFileId" name="UploadedFileId"/>
@@ -41,101 +43,105 @@
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
         <button type="submit" id="submitBtn" class="btn btn-primary">Submit</button>
-
-        <script src="https://cdn.jsdelivr.net/npm/tus-js-client@latest/dist/tus.min.js"></script>
-        <script>
-        const fileInput = document.getElementById('fileUpload');
-        const submitBtn = document.getElementById('submitBtn');
-        const uploadProgress = document.getElementById('uploadProgress');
-        const progressBar = document.getElementById('progressBar');
-        const progressText = document.getElementById('progressText');
-        const uploadStatus = document.getElementById('uploadStatus');
-        const uploadedFileIdInput = document.getElementById('UploadedFileId');
-        const formSessionIdInput = document.getElementById('FormSessionId');
-        const tusApiUrl = document.getElementById('tusApiUrl').value;
-        
-        let currentUpload = null;
-        
-        fileInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            
-            uploadProgress.style.display = 'block';
-            uploadStatus.innerHTML = '';
-            submitBtn.disabled = true;
-            
-            // Create a new tus upload pointing to centralized API
-            const upload = new tus.Upload(file, {
-                endpoint: tusApiUrl + '/files/',
-                retryDelays: [0, 3000, 5000, 10000, 20000],
-                metadata: {
-                    filename: file.name,
-                    filetype: file.type,
-                    sessionId: formSessionIdInput.value,
-                    appId: '@UploadOpts.Value.EncryptedAppId',
-                    zoneId: 'Zone1'
-                },
-                onError: function(error) {
-                    console.error('Upload failed:', error);
-                    uploadStatus.innerHTML = '<div class="alert alert-danger">Upload failed: ' + error + '</div>';
-                    submitBtn.disabled = false;
-                },
-                onProgress: function(bytesUploaded, bytesTotal) {
-                    const percentage = ((bytesUploaded / bytesTotal) * 100).toFixed(2);
-                    progressBar.style.width = percentage + '%';
-                    progressBar.textContent = percentage + '%';
-                    progressText.textContent = percentage + '%';
-                },
-                onSuccess: function() {
-                    console.log('Upload complete!');
-                    uploadStatus.innerHTML = '<div class="alert alert-success">Upload complete!</div>';
-                    
-                    // Extract file ID from upload URL
-                    const uploadUrl = upload.url;
-                    const fileId = uploadUrl.substring(uploadUrl.lastIndexOf('/') + 1);
-                    
-                    // Store the file ID in hidden field
-                    uploadedFileIdInput.value = fileId;
-                    submitBtn.disabled = false;
-                }
-            });
-            
-            currentUpload = upload;
-            upload.start();
-        });
-        
-        // If returning to page after validation error with existing file
-        if (uploadedFileIdInput.value) {
-            submitBtn.disabled = false;
-        }
-        
-        async function deleteUploadedFile() {
-            const fileId = uploadedFileIdInput.value;
-            if (!fileId) return;
-            
-            if (!confirm('Are you sure you want to remove the uploaded file?')) return;
-            
-            try {
-                const response = await fetch('?handler=DeleteFile&fileId=' + fileId, {
-                    method: 'POST',
-                    headers: {
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                    }
-                });
-                
-                const result = await response.json();
-                if (result.success) {
-                    uploadedFileIdInput.value = '';
-                    uploadStatus.innerHTML = '';
-                    location.reload();
-                }
-            } catch (error) {
-                console.error('Error deleting file:', error);
-                alert('Failed to delete file');
-            }
-        }
-    </script>
     </form>
+
 </div>
+
+<script src="~/cmpnt/upload.js"></script>
+
+@*     <script src="https://cdn.jsdelivr.net/npm/tus-js-client@latest/dist/tus.min.js"></script> *@
+@*     <script> *@
+@*     const fileInput = document.getElementById('fileUpload'); *@
+@*     const submitBtn = document.getElementById('submitBtn'); *@
+@*     const uploadProgress = document.getElementById('uploadProgress'); *@
+@*     const progressBar = document.getElementById('progressBar'); *@
+@*     const progressText = document.getElementById('progressText'); *@
+@*     const uploadStatus = document.getElementById('uploadStatus'); *@
+@*     const uploadedFileIdInput = document.getElementById('UploadedFileId'); *@
+@*     const formSessionIdInput = document.getElementById('FormSessionId'); *@
+@*     const tusApiUrl = document.getElementById('tusApiUrl').value; *@
+@*      *@
+@*     let currentUpload = null; *@
+@*      *@
+@*     fileInput.addEventListener('change', function(e) { *@
+@*         const file = e.target.files[0]; *@
+@*         if (!file) return; *@
+@*          *@
+@*         uploadProgress.style.display = 'block'; *@
+@*         uploadStatus.innerHTML = ''; *@
+@*         submitBtn.disabled = true; *@
+@*          *@
+@*         // Create a new tus upload pointing to centralized API *@
+@*         const upload = new tus.Upload(file, { *@
+@*             endpoint: tusApiUrl + '/files/', *@
+@*             retryDelays: [0, 3000, 5000, 10000, 20000], *@
+@*             metadata: { *@
+@*                 filename: file.name, *@
+@*                 filetype: file.type, *@
+@*                 sessionId: formSessionIdInput.value, *@
+@*                 appId: '@UploadOpts.Value.EncryptedAppId', *@
+@*                 zoneId: 'Zone1' *@
+@*             }, *@
+@*             onError: function(error) { *@
+@*                 console.error('Upload failed:', error); *@
+@*                 uploadStatus.innerHTML = '<div class="alert alert-danger">Upload failed: ' + error + '</div>'; *@
+@*                 submitBtn.disabled = false; *@
+@*             }, *@
+@*             onProgress: function(bytesUploaded, bytesTotal) { *@
+@*                 const percentage = ((bytesUploaded / bytesTotal) * 100).toFixed(2); *@
+@*                 progressBar.style.width = percentage + '%'; *@
+@*                 progressBar.textContent = percentage + '%'; *@
+@*                 progressText.textContent = percentage + '%'; *@
+@*             }, *@
+@*             onSuccess: function() { *@
+@*                 console.log('Upload complete!'); *@
+@*                 uploadStatus.innerHTML = '<div class="alert alert-success">Upload complete!</div>'; *@
+@*                  *@
+@*                 // Extract file ID from upload URL *@
+@*                 const uploadUrl = upload.url; *@
+@*                 const fileId = uploadUrl.substring(uploadUrl.lastIndexOf('/') + 1); *@
+@*                  *@
+@*                 // Store the file ID in hidden field *@
+@*                 uploadedFileIdInput.value = fileId; *@
+@*                 submitBtn.disabled = false; *@
+@*             } *@
+@*         }); *@
+@*          *@
+@*         currentUpload = upload; *@
+@*         upload.start(); *@
+@*     }); *@
+@*      *@
+@*     // If returning to page after validation error with existing file *@
+@*     if (uploadedFileIdInput.value) { *@
+@*         submitBtn.disabled = false; *@
+@*     } *@
+@*      *@
+@*     async function deleteUploadedFile() { *@
+@*         const fileId = uploadedFileIdInput.value; *@
+@*         if (!fileId) return; *@
+@*          *@
+@*         if (!confirm('Are you sure you want to remove the uploaded file?')) return; *@
+@*          *@
+@*         try { *@
+@*             const response = await fetch('?handler=DeleteFile&fileId=' + fileId, { *@
+@*                 method: 'POST', *@
+@*                 headers: { *@
+@*                     'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value *@
+@*                 } *@
+@*             }); *@
+@*              *@
+@*             const result = await response.json(); *@
+@*             if (result.success) { *@
+@*                 uploadedFileIdInput.value = ''; *@
+@*                 uploadStatus.innerHTML = ''; *@
+@*                 location.reload(); *@
+@*             } *@
+@*         } catch (error) { *@
+@*             console.error('Error deleting file:', error); *@
+@*             alert('Failed to delete file'); *@
+@*         } *@
+@*     } *@
+@* </script> *@
+
 </body>
 </html>

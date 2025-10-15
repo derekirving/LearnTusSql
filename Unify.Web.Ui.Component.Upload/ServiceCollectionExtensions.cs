@@ -31,7 +31,9 @@ public static class ServiceCollectionExtensions
             client.Timeout = TimeSpan.FromMinutes(timeoutMinutes);
         });
         
-        services.AddTransient<ITagHelperComponent, SimpleTagHelperComponent>();
+        services.AddTransient<ITagHelperComponent, WebUploadsTagHelperComponent>();
+        
+        services.AddSingleton<UnifyUploadService>();
         
         return services;
     }

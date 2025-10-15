@@ -3,22 +3,15 @@ using Microsoft.Extensions.Configuration;
 
 namespace Unify.Web.Ui.Component.Upload;
 
-public class TusApiClient
+public class TusApiClient(HttpClient httpClient, IConfiguration configuration)
 {
-    private readonly HttpClient _httpClient;
-    private readonly string _appId;
+    private readonly string _appId = configuration["TusApi:AppId"] ?? "DefaultApp";
 
-    public TusApiClient(HttpClient httpClient, IConfiguration configuration)
-    {
-        _httpClient = httpClient;
-        _appId = configuration["TusApi:AppId"] ?? "DefaultApp";
-    }
-    
-    public string Version => "0.1.0";
+    public static string Version => "0.1.0";
 
     public async Task<bool> AssociateFileAsync(string fileId, string sessionId, CancellationToken ct = default)
     {
-        var response = await _httpClient.PostAsJsonAsync(
+        var response = await httpClient.PostAsJsonAsync(
             $"/api/files/{fileId}/associate",
             new { SessionId = sessionId, AppId = _appId },
             ct);
@@ -32,7 +25,7 @@ public class TusApiClient
         
         foreach (var fileId in fileIds)
         {
-            var response = await _httpClient.PostAsync(
+            var response = await httpClient.PostAsync(
                 $"/api/files/{fileId}/commit",
                 null,
                 ct);
@@ -46,7 +39,7 @@ public class TusApiClient
 
     public async Task<List<string>> GetFilesBySessionAsync(string sessionId, CancellationToken ct = default)
     {
-        var response = await _httpClient.GetFromJsonAsync<List<string>>(
+        var response = await httpClient.GetFromJsonAsync<List<string>>(
             $"/api/sessions/{sessionId}/files",
             ct);
 
@@ -55,14 +48,14 @@ public class TusApiClient
 
     public async Task<FileInfoDto?> GetFileInfoAsync(string fileId, CancellationToken ct = default)
     {
-        return await _httpClient.GetFromJsonAsync<FileInfoDto>(
+        return await httpClient.GetFromJsonAsync<FileInfoDto>(
             $"/api/files/{fileId}",
             ct);
     }
 
     public async Task<bool> DeleteFileAsync(string fileId, CancellationToken ct = default)
     {
-        var response = await _httpClient.DeleteAsync(
+        var response = await httpClient.DeleteAsync(
             $"/api/files/{fileId}",
             ct);
 
@@ -71,6 +64,6 @@ public class TusApiClient
 
     public string GetDownloadUrl(string fileId)
     {
-        return $"{_httpClient.BaseAddress}api/files/{fileId}/download";
+        return $"{httpClient.BaseAddress}api/files/{fileId}/download";
     }
 }

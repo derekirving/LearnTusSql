@@ -1,63 +1,36 @@
-using System.Security.Cryptography;
-using System.Text;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Razor.TagHelpers;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 
 namespace Unify.Web.Ui.Component.Upload.TagHelpers;
 
-public class WebUploadsTagHelperComponent(IMemoryCache cache, IWebHostEnvironment environment) : TagHelperComponent
+public class WebUploadsTagHelperComponent(IOptions<UnifyUploadOptions> options) : TagHelperComponent
 {
-    [ViewContext][HtmlAttributeNotBound] public ViewContext? ViewContext { get; set; }
-    
     public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
     {
-        if (ViewContext == null)
-        {
-            output.SuppressOutput();
-            return;
-        }
-
-        var pathBase = ViewContext.HttpContext.Request.PathBase;
-        var isDev = environment.IsDevelopment();
+       AddNoJs(output);
 
         if (string.Equals(output.TagName, "head", StringComparison.OrdinalIgnoreCase))
         {
-            var fileName = isDev ? "upload.css" : "upload.min.css";
-            var hash = await GetOrCreateHash(fileName);
-            var url = $"{pathBase}/unify/uploads/static/{fileName}?v={hash}";
-            output.PostContent.AppendHtml($"<link rel=\"stylesheet\" href=\"{url}\">{Environment.NewLine}");
+            var encryptedId = options.Value.EncryptedAppId;
+            output.PostContent.AppendHtml($"<meta name=\"unify-upload-id\" content==\"{encryptedId}\" />{Environment.NewLine}");
         }
-        else if (string.Equals(output.TagName, "body", StringComparison.OrdinalIgnoreCase))
-        {
-            var fileName = isDev ? "upload.js" : "upload.min.js";
-            var hash = await GetOrCreateHash(fileName);
-            var url = $"{pathBase}/unify/uploads/static/{fileName}?v={hash}";
-            output.PostContent.AppendHtml($"<script src=\"{url}\"></script>{Environment.NewLine}");
-        }
+        
+        await base.ProcessAsync(context, output);
     }
 
-    private async Task<string?> GetOrCreateHash(string fileName)
+    private static void AddNoJs(TagHelperOutput output)
     {
-        var identifier = $"Unify.Web.Ui.Component.Upload.Files.{fileName}";
-
-        return await cache.GetOrCreateAsync(identifier + ".hash", async entry =>
+        if (!string.Equals(output.TagName, "body", StringComparison.OrdinalIgnoreCase)) return;
+        const string classToAdd = "no-js";
+        if (output.Attributes.TryGetAttribute("class", out var classAttr))
         {
-            entry.Priority = CacheItemPriority.Low;
-
-            var assembly = typeof(WebUploadsTagHelperComponent).Assembly;
-            await using var resourceStream = assembly.GetManifestResourceStream(identifier);
-            if (resourceStream == null)
-            {
-                return string.Empty;
-            }
-
-            using var sha256 = SHA256.Create();
-            var hashBytes = await sha256.ComputeHashAsync(resourceStream);
-            return Convert.ToBase64String(hashBytes);
-        });
+            var existing = classAttr.Value?.ToString();
+            var newValue = string.IsNullOrWhiteSpace(existing) ? classToAdd : $"{existing} {classToAdd}";
+            output.Attributes.SetAttribute("class", newValue);
+        }
+        else
+        {
+            output.Attributes.Add("class", classToAdd);
+        }
     }
 }

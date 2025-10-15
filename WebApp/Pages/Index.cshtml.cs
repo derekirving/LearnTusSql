@@ -12,12 +12,12 @@ public class Index(IConfiguration configuration, TusApiClient tusApiClient) : Pa
     [BindProperty] public List<string> UploadedFileId { get; set; } = [];
 
     [BindProperty]
-    public string FormSessionId { get; set; }
+    public string FormSessionId { get; set; } // WIIL BE DONE IN TAG-HELPER
     
     public void OnGet()
     {
         FormSessionId = Guid.NewGuid().ToString("n");
-        ClientVersion = tusApiClient.Version;
+        ClientVersion = TusApiClient.Version;
     }
 
     public async Task<IActionResult> OnPostAsync()
