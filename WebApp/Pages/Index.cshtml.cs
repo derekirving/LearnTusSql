@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Unify.Web.Ui.Component.Upload;
 
-public class Index(IConfiguration configuration, TusApiClient tusApiClient) : PageModel
+public class Index(IConfiguration configuration, UnifyUploadsClient tusApiClient) : PageModel
 {
     public string TusApiUrl = configuration["Unify:Uploads:BaseUrl"]!;
     public string? ClientVersion;
@@ -17,7 +17,7 @@ public class Index(IConfiguration configuration, TusApiClient tusApiClient) : Pa
     public void OnGet()
     {
         FormSessionId = Guid.NewGuid().ToString("n");
-        ClientVersion = TusApiClient.Version;
+        ClientVersion = tusApiClient.Version;
     }
 
     public async Task<IActionResult> OnPostAsync()

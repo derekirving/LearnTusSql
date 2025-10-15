@@ -20,7 +20,7 @@ public static class ServiceCollectionExtensions
         
         services.Configure<UnifyUploadOptions>(o => o.EncryptedAppId = encryptedId);
         
-        services.AddHttpClient<TusApiClient>(client =>
+        services.AddHttpClient<UnifyUploadsClient>(client =>
         {
             var baseUrl = configuration["Unify:Uploads:BaseUrl"];
             ArgumentException.ThrowIfNullOrEmpty(baseUrl);

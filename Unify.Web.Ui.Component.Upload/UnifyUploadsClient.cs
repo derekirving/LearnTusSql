@@ -1,23 +1,20 @@
 using System.Net.Http.Json;
-using Microsoft.Extensions.Configuration;
 
 namespace Unify.Web.Ui.Component.Upload;
 
-public class TusApiClient(HttpClient httpClient, IConfiguration configuration)
+public class UnifyUploadsClient(HttpClient httpClient)
 {
-    private readonly string _appId = configuration["TusApi:AppId"] ?? "DefaultApp";
+    public string Version => "0.1.0";
 
-    public static string Version => "0.1.0";
-
-    public async Task<bool> AssociateFileAsync(string fileId, string sessionId, CancellationToken ct = default)
-    {
-        var response = await httpClient.PostAsJsonAsync(
-            $"/api/files/{fileId}/associate",
-            new { SessionId = sessionId, AppId = _appId },
-            ct);
-
-        return response.IsSuccessStatusCode;
-    }
+    // public async Task<bool> AssociateFileAsync(string fileId, string sessionId, string appId, CancellationToken ct = default)
+    // {
+    //     var response = await httpClient.PostAsJsonAsync(
+    //         $"/api/files/{fileId}/associate",
+    //         new { SessionId = sessionId, AppId = appId },
+    //         ct);
+    //
+    //     return response.IsSuccessStatusCode;
+    // }
 
     public async Task<List<CommitedUploadResult>> CommitFilesAsync(List<string> fileIds, CancellationToken ct = default)
     {
@@ -43,7 +40,7 @@ public class TusApiClient(HttpClient httpClient, IConfiguration configuration)
             $"/api/sessions/{sessionId}/files",
             ct);
 
-        return response ?? new List<string>();
+        return response ?? [];
     }
 
     public async Task<FileInfoDto?> GetFileInfoAsync(string fileId, CancellationToken ct = default)

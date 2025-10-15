@@ -4,11 +4,11 @@ using Microsoft.Extensions.Options;
 namespace Unify.Web.Ui.Component.Upload.TagHelpers;
 
 [HtmlTargetElement("unify-web-upload")]
-public class WebUploadsTagHelper(IOptions<UnifyUploadOptions> uploadOptions, UnifyUploadService uploadService, TusApiClient client) : TagHelper
+public class WebUploadsTagHelper(IOptions<UnifyUploadOptions> uploadOptions, UnifyUploadService uploadService, UnifyUploadsClient client) : TagHelper
 {
     public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
     {
-        var v = TusApiClient.Version.ToString();
+        var v = client.Version;
         var min = uploadService.GetMinimumFiles("MyUploadZone");
         
         output.TagName = "";

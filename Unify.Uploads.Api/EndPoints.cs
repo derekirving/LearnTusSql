@@ -6,7 +6,7 @@ public static class EndPoints
     {
         // Minimal API endpoints
 
-        endpoints.MapGet("/api", async ctx => await ctx.Response.WriteAsync("Uploads API"));
+        endpoints.MapGet("/", async ctx => await ctx.Response.WriteAsync("Unify Uploads API at /api"));
 
 // Get file info
         endpoints.MapGet("/api/files/{fileId}", async (
