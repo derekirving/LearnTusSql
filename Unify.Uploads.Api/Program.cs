@@ -23,7 +23,7 @@ builder.Services.AddCors(options =>
             .WithOrigins(allowedOrigins)
             .AllowAnyMethod()
             .AllowAnyHeader()
-            .WithExposedHeaders("Upload-Offset", "Upload-Length", "Tus-Resumable", "Location");
+            .WithExposedHeaders("Upload-Offset", "Upload-Length", "Tus-Resumable", "Location", "Content-Location");
     });
 });
 

@@ -11,8 +11,11 @@ public class WebUploadsTagHelperComponent(IOptions<UnifyUploadOptions> options) 
 
         if (string.Equals(output.TagName, "head", StringComparison.OrdinalIgnoreCase))
         {
+            var baseUrl = options.Value.BaseUrl;
+            output.PostContent.AppendHtml($"<meta name=\"unify-upload-baseUrl\" content=\"{baseUrl}\" />{Environment.NewLine}");
+            
             var encryptedId = options.Value.EncryptedAppId;
-            output.PostContent.AppendHtml($"<meta name=\"unify-upload-id\" content==\"{encryptedId}\" />{Environment.NewLine}");
+            output.PostContent.AppendHtml($"<meta name=\"unify-upload-id\" content=\"{encryptedId}\" />{Environment.NewLine}");
         }
         
         await base.ProcessAsync(context, output);

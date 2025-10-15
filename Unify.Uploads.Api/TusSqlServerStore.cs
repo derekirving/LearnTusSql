@@ -499,7 +499,21 @@ public class TusSqlServerStore : ITusStore,
         FROM TusFiles 
         WHERE FileId = @FileId";
     
-        return await conn.QuerySingleOrDefaultAsync<TusFileInfo>(sql, new { FileId = fileId });
+        var fi = await conn.QuerySingleOrDefaultAsync(sql, new { FileId = fileId });
+        if (fi == null) return null;
+        
+        return new TusFileInfo(
+            fi.FileId,
+            fi.Metadata.GetValue("fileName"),
+            fi.UploadLength,
+            fi.UploadOffset,
+            fi.Metadata,
+            fi.CreatedAt,
+            fi.ExpiresAt,
+            fi.SessionId,
+            fi.AppId,
+            fi.IsCommitted
+        );
     }
 
     #endregion

@@ -2,6 +2,7 @@ namespace Unify.Uploads.Api;
 
 public record TusFileInfo(
     string FileId,
+    string FileName,
     long? UploadLength,
     long UploadOffset,
     string Metadata,

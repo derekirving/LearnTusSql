@@ -4,7 +4,7 @@ namespace Unify.Web.Ui.Component.Upload;
 
 public class UnifyUploadsClient(HttpClient httpClient)
 {
-    public string Version => "0.1.0";
+    internal string Version => "0.1.0";
 
     // public async Task<bool> AssociateFileAsync(string fileId, string sessionId, string appId, CancellationToken ct = default)
     // {
@@ -16,7 +16,7 @@ public class UnifyUploadsClient(HttpClient httpClient)
     //     return response.IsSuccessStatusCode;
     // }
 
-    public async Task<List<CommitedUploadResult>> CommitFilesAsync(List<string> fileIds, CancellationToken ct = default)
+    internal async Task<List<CommitedUploadResult>> CommitFilesAsync(List<string> fileIds, CancellationToken ct = default)
     {
         var list = new  List<CommitedUploadResult>();
         
@@ -34,7 +34,7 @@ public class UnifyUploadsClient(HttpClient httpClient)
         return list;
     }
 
-    public async Task<List<string>> GetFilesBySessionAsync(string sessionId, CancellationToken ct = default)
+    internal async Task<List<string>> GetFilesBySessionAsync(string sessionId, CancellationToken ct = default)
     {
         var response = await httpClient.GetFromJsonAsync<List<string>>(
             $"/api/sessions/{sessionId}/files",
@@ -43,14 +43,14 @@ public class UnifyUploadsClient(HttpClient httpClient)
         return response ?? [];
     }
 
-    public async Task<FileInfoDto?> GetFileInfoAsync(string fileId, CancellationToken ct = default)
+    internal async Task<FileInfoDto?> GetFileInfoAsync(string fileId, CancellationToken ct = default)
     {
         return await httpClient.GetFromJsonAsync<FileInfoDto>(
             $"/api/files/{fileId}",
             ct);
     }
 
-    public async Task<bool> DeleteFileAsync(string fileId, CancellationToken ct = default)
+    internal async Task<bool> DeleteFileAsync(string fileId, CancellationToken ct = default)
     {
         var response = await httpClient.DeleteAsync(
             $"/api/files/{fileId}",
@@ -59,7 +59,7 @@ public class UnifyUploadsClient(HttpClient httpClient)
         return response.IsSuccessStatusCode;
     }
 
-    public string GetDownloadUrl(string fileId)
+    internal string GetDownloadUrl(string fileId)
     {
         return $"{httpClient.BaseAddress}api/files/{fileId}/download";
     }

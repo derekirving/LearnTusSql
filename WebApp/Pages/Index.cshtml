@@ -1,7 +1,5 @@
 @page
-@using Unify.Web.Ui.Component.Upload
 @model WebApp.Pages.Index
-@inject Microsoft.Extensions.Options.IOptions<UnifyUploadOptions> UploadOpts
 @{
     Layout = null;
 }
@@ -16,34 +14,37 @@
 <body>
 <div>
     <p>Version @Model.ClientVersion</p>
-    <unify-web-upload/>
     <form method="post">
-
-        <div class="mb-3">
-            <label class="form-label">Upload File</label>
-            <input type="file" id="fileUpload" class="form-control"/>
-
-            <div id="uploadProgress" style="display:none;" class="mt-2">
-                <div class="progress">
-                    <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
-                </div>
-                <small id="progressText" class="text-muted">0%</small>
-            </div>
-
-            <div id="uploadStatus" class="mt-2"></div>
-
-        </div>
-
-        <input type="hidden" asp-for="FormSessionId"/>
-
-        <input type="hidden" id="tusApiUrl" value="@Model.TusApiUrl"/>
-
-        <input type="hidden" id="UploadedFileId" name="UploadedFileId"/>
-
-        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-
-        <button type="submit" id="submitBtn" class="btn btn-primary">Submit</button>
+        <unify-web-upload zone="MyUploadZone"/>
+        <input type="submit"/>
     </form>
+    @* <form method="post"> *@
+    @* *@
+    @*     <div class="mb-3"> *@
+    @*         <label class="form-label">Upload File</label> *@
+    @*         <input type="file" id="fileUpload" class="form-control"/> *@
+    @* *@
+    @*         <div id="uploadProgress" style="display:none;" class="mt-2"> *@
+    @*             <div class="progress"> *@
+    @*                 <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%"></div> *@
+    @*             </div> *@
+    @*             <small id="progressText" class="text-muted">0%</small> *@
+    @*         </div> *@
+    @* *@
+    @*         <div id="uploadStatus" class="mt-2"></div> *@
+    @* *@
+    @*     </div> *@
+    @* *@
+    @*     <input type="hidden" asp-for="FormSessionId"/> *@
+    @* *@
+    @*     <input type="hidden" id="tusApiUrl" value="@Model.TusApiUrl"/> *@
+    @* *@
+    @*     <input type="hidden" id="UploadedFileId" name="UploadedFileId"/> *@
+    @* *@
+    @*     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div> *@
+    @* *@
+    @*     <button type="submit" id="submitBtn" class="btn btn-primary">Submit</button> *@
+    @* </form> *@
 
 </div>
 

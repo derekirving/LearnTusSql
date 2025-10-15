@@ -21,7 +21,10 @@ public sealed class TusConfigurationFactory(ILogger<TusConfigurationFactory> log
         return new DefaultTusConfiguration
         {
             Store = store,
-            UrlPath = "/files",
+            UrlPath = "/unify/uploads",
+            AllowedExtensions = new TusExtensions(TusExtensions.Creation),
+            MetadataParsingStrategy = MetadataParsingStrategy.AllowEmptyValues,
+            UsePipelinesIfAvailable = true,
             Events = new Events
             {
                 OnFileCompleteAsync = async ctx =>
@@ -40,6 +43,9 @@ public sealed class TusConfigurationFactory(ILogger<TusConfigurationFactory> log
                     //     var appId = appIdMetadata.GetString(Encoding.UTF8);
                     //     await store.SetAppIdAsync(file.Id, appId, ctx.CancellationToken);
                     // }
+                    
+                    var endPoint = $"{ctx.HttpContext.Request.PathBase}/unify/uploads/{ctx.FileId}";
+                    ctx.HttpContext.Response.Headers.Append("Content-Location", endPoint);
 
                     var logger = ctx.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
                     Log.FileUploadCompleted(logger, file.Id);

@@ -13,16 +13,23 @@ public static class ServiceCollectionExtensions
         var secret = configuration["Unify:Secret"];
         ArgumentException.ThrowIfNullOrEmpty(secret);
         
+        var baseUrl = configuration["Unify:Uploads:BaseUrl"];
+        ArgumentException.ThrowIfNullOrEmpty(baseUrl);
+        
         UnifyEncryptionProvider.Initialise(configuration);
         var encryptionLib = UnifyEncryptionProvider.Instance;
         
         var encryptedId = encryptionLib.Encrypt(unifyAppId, secret);
         
-        services.Configure<UnifyUploadOptions>(o => o.EncryptedAppId = encryptedId);
+        services.Configure<UnifyUploadOptions>(o =>
+        {
+            o.BaseUrl = baseUrl;
+            o.EncryptedAppId = encryptedId;
+        });
         
         services.AddHttpClient<UnifyUploadsClient>(client =>
         {
-            var baseUrl = configuration["Unify:Uploads:BaseUrl"];
+            
             ArgumentException.ThrowIfNullOrEmpty(baseUrl);
             
             client.DefaultRequestHeaders.Add(AuthConstants.ApiKeyHeaderName, secret);
@@ -33,7 +40,7 @@ public static class ServiceCollectionExtensions
         
         services.AddTransient<ITagHelperComponent, WebUploadsTagHelperComponent>();
         
-        services.AddSingleton<UnifyUploadService>();
+        services.AddSingleton<IUnifyUploads, UnifyUploads>();
         
         return services;
     }
