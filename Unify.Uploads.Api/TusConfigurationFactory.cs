@@ -43,7 +43,7 @@ public sealed class TusConfigurationFactory(ILogger<TusConfigurationFactory> log
                     //     var appId = appIdMetadata.GetString(Encoding.UTF8);
                     //     await store.SetAppIdAsync(file.Id, appId, ctx.CancellationToken);
                     // }
-                    
+
                     var endPoint = $"{ctx.HttpContext.Request.PathBase}/unify/uploads/{ctx.FileId}";
                     ctx.HttpContext.Response.Headers.Append("Content-Location", endPoint);
 

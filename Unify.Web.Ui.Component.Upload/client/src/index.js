@@ -17,7 +17,7 @@ const uploadsInit = () => {
     }
 
     const ENDPOINT = `${baseUrl}/unify/uploads/`;
-    
+
     console.log(`Unify.Web.Ui.Component.Upload-> Version: ${packageJson.version}`);
     console.log("Unify.Web.Ui.Component.Upload-> Tus is supported and can store URLs", tus.isSupported, tus.canStoreURLs);
     console.log(`Unify.Web.Ui.Component.Upload-> Endpoint: ${ENDPOINT}`);
@@ -82,278 +82,278 @@ const uploadsInit = () => {
         })
     });
 
-    if (isAdvancedUpload) {
-        const dragEvents = ['drag', 'dragstart', 'dragend', 'dragover', 'dragenter', 'dragleave', 'drop'];
-        const preventDefaultHandler = e => {
-            e.preventDefault();
-            e.stopPropagation();
-        };
+    const enableHtmx = (submitBtn, zone, minFiles, triggerFormSubmit) => {
+        if (submitBtn) {
+            if (window.htmx) {
+                document.body.addEventListener('htmx:confirm', function (event) {
 
-        const dragOverHandler = (zone, selectedFiles, maxFiles) => () => {
-            if (selectedFiles.length === maxFiles) return;
-            zone.style.cursor = 'default';
-            zone.classList.add('is-dragover');
-        };
+                    console.log("htmx:confirm");
 
-        const dragLeaveHandler = zone => () => {
-            zone.classList.remove('is-dragover');
-        };
+                    if (event.target.classList.contains('submit-after-unify-uploads') && isHtmxElem(event)) {
+                        // Cancel the automatic request
+                        console.log("htmx:confirm doing things before submit", event)
+                        triggerFormSubmit(event);
+                        event.preventDefault();
+                        //event.detail.issueRequest();
+                    }
+                }, {once: true});
+            } else {
+                submitBtn.addEventListener('click', (e) => {
+                    //console.log(parseInt(zone.dataset.fileCount, 10), minFiles)
+                    e.preventDefault();
+                    triggerFormSubmit(false);
+                });
+            }
+        }
+    };
 
-        const dropHandler = (zone, selectedFiles, maxFiles, showFiles) => e => {
-            const dropped = Array.from(e.dataTransfer.files);
-            if (selectedFiles.length + dropped.length > maxFiles) return;
-            showFiles(dropped);
-        };
+    const onSuccess = (payload, form, zone, submitBtn, file, url, event) => {
+        const {lastResponse} = payload;
+        const contentLocation = lastResponse.getHeader('Content-Location');
 
-        const enableHtmx = (submitBtn, zone, minFiles, triggerFormSubmit) => {
+        console.log('contentLocation', contentLocation);
+
+        zone.dataset.fileCount--;
+
+        zone.classList.add('is-success');
+        zone.classList.remove('is-uploading');
+        zone.classList.remove('is-error');
+
+        const fileInput = form.querySelector('input[type="file"]');
+        if (fileInput) fileInput.value = '';
+
+        const fileId = url.split("/").pop();
+
+        const hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = 'fileId';
+        hidden.value = fileId;
+        form.appendChild(hidden);
+
+        document.dispatchEvent(new CustomEvent('unify-upload-success', {
+            detail: {form, zone: zone.dataset.zone, fileId, url, contentLocation, event},
+        }));
+
+        if (parseInt(zone.dataset.fileCount, 10) === 0) {
+            performSubmit(form, submitBtn, true, event);
+        }
+    }
+
+    const performUpload = (form, submitBtn, zone, files, event) => {
+        console.log("performUpload", form, submitBtn, zone, files, event);
+
+        zone.classList.add('is-uploading');
+        const zoneId = zone.dataset.zone;
+        const progressBar = zone.querySelector('.progress-bar');
+
+        for (const file of files) {
+            const upload = new tus.Upload(file,
+                {
+                    endpoint: ENDPOINT,
+                    retryDelays: [],
+                    onSuccess: (payload) => onSuccess(payload, form, zone, submitBtn, file, upload.url, event),
+                    onProgress: (bytesUploaded, bytesTotal) => {
+                        const percentage = ((bytesUploaded / bytesTotal) * 100).toFixed(2);
+                        progressBar.style.width = percentage + '%';
+                        progressBar.textContent = `${percentage}% - ${file.name}`;
+                    },
+                    metadata: {
+                        name: file.name,
+                        contentType: file.type || 'application/octet-stream',
+                        size: file.size,
+                        zoneId: zoneId,
+                        appId: APP_ID
+                    },
+                    onError: (err) => {
+                        zone.classList.remove('is-uploading');
+                        submitBtn.disabled = false;
+
+                        document.dispatchEvent(new CustomEvent('unify-upload-filed', {
+                            detail: {form, zone: zone.dataset.zone, event},
+                        }));
+
+                        const url = err.originalRequest._url;
+                        if (err.originalResponse && err.originalResponse._xhr) {
+                            const status = err.originalResponse._xhr.status;
+                            const statusText = err.originalResponse._xhr.statusText;
+                            const responseText = err.originalResponse._xhr.responseText || 'No more information available.';
+
+                            alert(`Uploading to ${url} failed.\nStatus: ${status}\nStatusText: ${statusText}\nResponse: ${responseText}`);
+                        } else {
+                            console.log(err);
+                        }
+                    },
+                    onShouldRetry: (err, retryAttempt, options) => {
+                        // console.log("Error", err)
+                        // console.log("Request", err.originalRequest)
+                        // console.log("Response", err.originalResponse)
+
+                        const status = err.originalResponse ? err.originalResponse.getStatus() : 0
+                        if (status === 401
+                            || status === 403
+                            || status === 404) {
+                            return false
+                        }
+
+                        // For any other status code, we retry.
+                        return true
+                    }
+                });
+
+            upload.findPreviousUploads().then(function (previousUploads) {
+
+                if (previousUploads.length) {
+                    upload.resumeFromPreviousUpload(previousUploads[0]);
+                }
+                upload.start();
+
+            }).catch(function () {
+                upload.start();
+            });
+        }
+    }
+
+    const performSubmit = (form, submitBtn, hasFiles, event) => {
+        document.dispatchEvent(new CustomEvent('unify-upload-form-submitting', {
+            detail: {form: form, submitButton: submitBtn, hasFiles: hasFiles, event: event},
+        }));
+
+        if (form.classList.contains('submit-after-unify-uploads')) {
+
+            if (!event) {
+                form.submit();
+            } else {
+                event.detail.issueRequest();
+            }
+        }
+    }
+
+    const zones = document.querySelectorAll('.zone');
+
+    for (const zone of zones) {
+
+        const zoneId = zone.dataset.zone;
+        const acceptedFiles = zone.dataset.accepted.split(',').map(ext => ext.trim().toLowerCase());
+        const minFiles = parseInt(zone.dataset.minFiles);
+        const maxFiles = parseInt(zone.dataset.maxFiles);
+        const maxFileSize = parseInt(zone.dataset.maxFileSize);
+
+        const form = zone.closest('form');
+        const input = zone.querySelector('input[type="file"]');
+        const label = document.querySelector(`label[for='file_${zoneId}']`);
+        const fileList = zone.querySelector('.fileList');
+
+        let submitBtn = form?.querySelector('[type="submit"]');
+
+        let selectedFiles = [];
+        const triggerFormSubmit = (event) => {
+            console.log("submit", form);
+
+            if (minFiles > 0 && parseInt(zone.dataset.fileCount, 10) < minFiles) {
+                const textElem = document.querySelector(`[data-for="${zone.dataset.zone}"]`);
+                const text = textElem ? textElem.textContent : "zone";
+                const plural = minFiles === 1 ? "file" : "files";
+                alert(`A minimum of ${minFiles} ${plural} must be added to "${text}"`);
+                return;
+            }
+
             if (submitBtn) {
-                if (window.htmx) {
-                    document.body.addEventListener('htmx:confirm', function (event) {
-
-                        console.log("htmx:confirm");
-
-                        if (event.target.classList.contains('submit-after-unify-uploads') && isHtmxElem(event)) {
-                            // Cancel the automatic request
-                            console.log("htmx:confirm doing things before submit", event)
-                            triggerFormSubmit(event);
-                            event.preventDefault();
-                            //event.detail.issueRequest();
-                        }
-                    }, {once: true});
-                } else {
-                    submitBtn.addEventListener('click', (e) => {
-                        //console.log(parseInt(zone.dataset.fileCount, 10), minFiles)
-                        e.preventDefault();
-                        triggerFormSubmit(false);
-                    });
-                }
+                submitBtn.disabled = true;
             }
+            const files = selectedFiles.length ? selectedFiles : input.files;
+            selectedFiles = [];
+
+            if (files.length === 0) {
+                performSubmit(form, submitBtn, false, event);
+            } else {
+                performUpload(form, submitBtn, zone, files, event);
+            }
+        }
+        const updateUI = () => {
+            input.disabled = selectedFiles.length === maxFiles;
+            label.style.cursor = input.disabled ? 'not-allowed' : 'pointer';
+            zone.style.cursor = input.disabled ? 'no-drop' : 'default';
+
+            if (!fileList) return;
+            fileList.innerHTML = '';
+            const ul = document.createElement('ul');
+            selectedFiles.forEach((file, idx) => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span>${SVG_DOC}${file.name} <small class="text-muted">(${(file.size / 1024).toFixed(1)} KB)</small></span>`;
+                const removeBtn = document.createElement('a');
+                removeBtn.href = '#';
+                removeBtn.setAttribute('aria-label', 'Remove file');
+                removeBtn.innerHTML = SVG_REMOVE;
+                removeBtn.addEventListener('click', e => {
+                    e.preventDefault();
+                    selectedFiles.splice(idx, 1);
+                    updateUI();
+                });
+                li.appendChild(removeBtn);
+                ul.appendChild(li);
+            });
+            fileList.appendChild(ul);
+
+            zone.dataset.fileCount = selectedFiles.length.toString();
+            const totalSizeKB = (selectedFiles.reduce((sum, file) => sum + file.size, 0) / 1024).toFixed(1);
+            label.innerHTML = `${selectedFiles.length} file${selectedFiles.length === 1 ? '' : 's'} selected (${totalSizeKB} KB)`;
+            if (maxFiles > 1 && selectedFiles.length < maxFiles) {
+                label.innerHTML += " <span><strong>Choose more</strong></span>";
+            }
+            document.dispatchEvent(new CustomEvent('unify-upload-files-changed', {
+                detail: {zone: zoneId, count: selectedFiles.length},
+            }));
         };
 
-        const onSuccess = (payload, form, zone, submitBtn, file, url, event) => {
-            const {lastResponse} = payload;
-            const contentLocation = lastResponse.getHeader('Content-Location');
-
-            console.log('contentLocation', contentLocation);
-
-            zone.dataset.fileCount--;
-
-            zone.classList.add('is-success');
-            zone.classList.remove('is-uploading');
-            zone.classList.remove('is-error');
-
-            const fileInput = form.querySelector('input[type="file"]');
-            if (fileInput) fileInput.value = '';
-
-            const fileId = url.split("/").pop();
-
-            const hidden = document.createElement('input');
-            hidden.type = 'hidden';
-            hidden.name = 'fileId';
-            hidden.value = fileId;
-            form.appendChild(hidden);
-
-            document.dispatchEvent(new CustomEvent('unify-upload-success', {
-                detail: {form, zone: zone.dataset.zone, fileId, url, contentLocation, event},
-            }));
-
-            if (parseInt(zone.dataset.fileCount, 10) === 0) {
-                performSubmit(form, submitBtn, true, event);
-            }
-        }
-
-        const performUpload = (form, submitBtn, zone, files, event) => {
-            console.log("performUpload", form, submitBtn, zone, files, event);
-
-            zone.classList.add('is-uploading');
-            const zoneId = zone.dataset.zone;
-            const progressBar = zone.querySelector('.progress-bar');
-
+        const showFiles = files => {
             for (const file of files) {
-                const upload = new tus.Upload(file,
-                    {
-                        endpoint: ENDPOINT,
-                        retryDelays: [],
-                        onSuccess: (payload) => onSuccess(payload, form, zone, submitBtn, file, upload.url, event),
-                        onProgress: (bytesUploaded, bytesTotal) => {
-                            const percentage = ((bytesUploaded / bytesTotal) * 100).toFixed(2);
-                            progressBar.style.width = percentage + '%';
-                            progressBar.textContent = `${percentage}% - ${file.name}`;
-                        },
-                        metadata: {
-                            name: file.name,
-                            contentType: file.type || 'application/octet-stream',
-                            size: file.size,
-                            zoneId: zoneId,
-                            appId: APP_ID
-                        },
-                        onError: (err) => {
-                            zone.classList.remove('is-uploading');
-                            submitBtn.disabled = false;
-
-                            document.dispatchEvent(new CustomEvent('unify-upload-filed', {
-                                detail: {form, zone: zone.dataset.zone, event},
-                            }));
-
-                            const url = err.originalRequest._url;
-                            if(err.originalResponse && err.originalResponse._xhr)
-                            {
-                                const status = err.originalResponse._xhr.status;
-                                const statusText = err.originalResponse._xhr.statusText;
-                                const responseText = err.originalResponse._xhr.responseText || 'No more information available.';
-
-                                alert(`Uploading to ${url} failed.\nStatus: ${status}\nStatusText: ${statusText}\nResponse: ${responseText}`);
-                            }else{
-                                console.log(err);
-                            }
-                        },
-                        onShouldRetry: (err, retryAttempt, options) => {
-                            // console.log("Error", err)
-                            // console.log("Request", err.originalRequest)
-                            // console.log("Response", err.originalResponse)
-
-                            const status = err.originalResponse ? err.originalResponse.getStatus() : 0
-                            if (status === 401
-                                || status === 403
-                                || status === 404) {
-                                return false
-                            }
-
-                            // For any other status code, we retry.
-                            return true
-                        }
-                    });
-
-                upload.findPreviousUploads().then(function (previousUploads) {
-
-                    if (previousUploads.length) {
-                        upload.resumeFromPreviousUpload(previousUploads[0]);
-                    }
-                    upload.start();
-
-                }).catch(function () {
-                    upload.start();
-                });
-            }
-        }
-
-        const performSubmit = (form, submitBtn, hasFiles, event) => {
-            document.dispatchEvent(new CustomEvent('unify-upload-form-submitting', {
-                detail: {form: form, submitButton: submitBtn, hasFiles: hasFiles, event: event},
-            }));
-
-            if (form.classList.contains('submit-after-unify-uploads')) {
-
-                if (!event) {
-                    form.submit();
-                } else {
-                    event.detail.issueRequest();
+                if (file.size > maxFileSize) {
+                    alert(`File too large: ${file.name}`);
+                    continue;
+                }
+                const fileExt = file.name.split('.').pop().toLowerCase();
+                if (!acceptedFiles.includes(fileExt)) {
+                    alert("Incorrect file extension. Allowed: " + acceptedFiles.map(ext => '.' + ext).join(', '));
+                    continue;
+                }
+                if (!selectedFiles.some(f => f.name === file.name && f.size === file.size)) {
+                    selectedFiles.push(file);
                 }
             }
-        }
+            updateUI();
+        };
 
-        const zones = document.querySelectorAll('.zone');
+        input.addEventListener('change', function (e) {
+            showFiles(e.target.files);
+            // can automatically submit the form on file select
+            //triggerFormSubmit();
+        });
 
-        for (const zone of zones) {
-
-            const zoneId = zone.dataset.zone;
-            const acceptedFiles = zone.dataset.accepted.split(',').map(ext => ext.trim().toLowerCase());
-            const minFiles = parseInt(zone.dataset.minFiles);
-            const maxFiles = parseInt(zone.dataset.maxFiles);
-            const maxFileSize = parseInt(zone.dataset.maxFileSize);
-
-            const form = zone.closest('form');
-            const input = zone.querySelector('input[type="file"]');
-            const label = document.querySelector(`label[for='file_${zoneId}']`);
-            const fileList = zone.querySelector('.fileList');
-
-            let submitBtn = form?.querySelector('[type="submit"]');
-
-            let selectedFiles = [];
-            const triggerFormSubmit = (form) => {
-                console.log("submit", form);
-
-                if (minFiles > 0 && parseInt(zone.dataset.fileCount, 10) < minFiles) {
-                    const textElem = document.querySelector(`[data-for="${zone.dataset.zone}"]`);
-                    const text = textElem ? textElem.textContent : "zone";
-                    const plural = minFiles === 1 ? "file" : "files";
-                    alert(`A minimum of ${minFiles} ${plural} must be added to "${text}"`);
-                    return;
-                }
-
-                if (submitBtn) {
-                    submitBtn.disabled = true;
-                }
-                const files = selectedFiles.length ? selectedFiles : input.files;
-                selectedFiles = [];
-
-                if (files.length === 0) {
-                    performSubmit(form, submitBtn, false, event);
-                } else {
-                    performUpload(form, submitBtn, zone, files, event);
-                }
-            }
-            const updateUI = () => {
-                input.disabled = selectedFiles.length === maxFiles;
-                label.style.cursor = input.disabled ? 'not-allowed' : 'pointer';
-                zone.style.cursor = input.disabled ? 'no-drop' : 'default';
-
-                if (!fileList) return;
-                fileList.innerHTML = '';
-                const ul = document.createElement('ul');
-                selectedFiles.forEach((file, idx) => {
-                    const li = document.createElement('li');
-                    li.innerHTML = `<span>${SVG_DOC}${file.name} <small class="text-muted">(${(file.size / 1024).toFixed(1)} KB)</small></span>`;
-                    const removeBtn = document.createElement('a');
-                    removeBtn.href = '#';
-                    removeBtn.setAttribute('aria-label', 'Remove file');
-                    removeBtn.innerHTML = SVG_REMOVE;
-                    removeBtn.addEventListener('click', e => {
-                        e.preventDefault();
-                        selectedFiles.splice(idx, 1);
-                        updateUI();
-                    });
-                    li.appendChild(removeBtn);
-                    ul.appendChild(li);
-                });
-                fileList.appendChild(ul);
-
-                zone.dataset.fileCount = selectedFiles.length.toString();
-                const totalSizeKB = (selectedFiles.reduce((sum, file) => sum + file.size, 0) / 1024).toFixed(1);
-                label.innerHTML = `${selectedFiles.length} file${selectedFiles.length === 1 ? '' : 's'} selected (${totalSizeKB} KB)`;
-                if (maxFiles > 1 && selectedFiles.length < maxFiles) {
-                    label.innerHTML += " <span><strong>Choose more</strong></span>";
-                }
-                document.dispatchEvent(new CustomEvent('unify-upload-files-changed', {
-                    detail: {zone: zoneId, count: selectedFiles.length},
-                }));
-            };
-
-            const showFiles = files => {
-                for (const file of files) {
-                    if (file.size > maxFileSize) {
-                        alert(`File too large: ${file.name}`);
-                        continue;
-                    }
-                    const fileExt = file.name.split('.').pop().toLowerCase();
-                    if (!acceptedFiles.includes(fileExt)) {
-                        alert("Incorrect file extension. Allowed: " + acceptedFiles.map(ext => '.' + ext).join(', '));
-                        continue;
-                    }
-                    if (!selectedFiles.some(f => f.name === file.name && f.size === file.size)) {
-                        selectedFiles.push(file);
-                    }
-                }
-                updateUI();
-            };
+        if (isAdvancedUpload) {
 
             zone.classList.add('has-advanced-upload');
+                
+            const dragEvents = ['drag', 'dragstart', 'dragend', 'dragover', 'dragenter', 'dragleave', 'drop'];
+            const preventDefaultHandler = e => {
+                e.preventDefault();
+                e.stopPropagation();
+            };
 
-            input.addEventListener('change', function (e) {
-                showFiles(e.target.files);
-                // can automatically submit the form on file select
-                //triggerFormSubmit();
-            });
+            const dragOverHandler = (zone, selectedFiles, maxFiles) => () => {
+                if (selectedFiles.length === maxFiles) return;
+                zone.style.cursor = 'default';
+                zone.classList.add('is-dragover');
+            };
+
+            const dragLeaveHandler = zone => () => {
+                zone.classList.remove('is-dragover');
+            };
+
+            const dropHandler = (zone, selectedFiles, maxFiles, showFiles) => e => {
+                const dropped = Array.from(e.dataTransfer.files);
+                if (selectedFiles.length + dropped.length > maxFiles) return;
+                showFiles(dropped);
+            };
 
             enableHtmx(submitBtn, zone, minFiles, triggerFormSubmit);
 

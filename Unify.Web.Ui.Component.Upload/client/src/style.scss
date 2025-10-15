@@ -69,11 +69,9 @@
 {
   font-size: smaller;
   display: block;
-  position: absolute;
-  top: 50%;
-  right: 0;
-  left: 0;
-
+  position: relative;
+  top: -50px;
+  text-align: center;
   -webkit-transform: translateY( -50% );
   transform: translateY( -50% );
 }
