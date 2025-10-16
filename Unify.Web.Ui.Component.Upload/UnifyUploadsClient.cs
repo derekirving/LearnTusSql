@@ -16,23 +16,23 @@ public class UnifyUploadsClient(HttpClient httpClient)
     //     return response.IsSuccessStatusCode;
     // }
 
-    internal async Task<List<CommitedUploadResult>> CommitFilesAsync(List<string> fileIds, CancellationToken ct = default)
+    internal async Task<List<CommitedUploadResult>> CommitFilesAsync(List<UnifyUploadFile> fileIds, CancellationToken ct = default)
     {
-        var list = new  List<CommitedUploadResult>();
-        
-        foreach (var fileId in fileIds)
+        var tasks = fileIds.Select(async item =>
         {
             var response = await httpClient.PostAsync(
-                $"/api/files/{fileId}/commit",
+                $"/api/files/{item.FileId}/commit",
                 null,
                 ct);
-            
-            list.Add(new CommitedUploadResult(fileId, response.IsSuccessStatusCode, response.ReasonPhrase));
-            
-        }
 
-        return list;
+            return new CommitedUploadResult(item.FileId, response.IsSuccessStatusCode, response.ReasonPhrase);
+        });
+
+        var results = await Task.WhenAll(tasks).ConfigureAwait(false);
+        return results.ToList();
     }
+
+
 
     internal async Task<List<string>> GetFilesBySessionAsync(string sessionId, CancellationToken ct = default)
     {

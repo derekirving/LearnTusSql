@@ -6,18 +6,18 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
 <head>
     <title>Uploads</title>
     <link rel="stylesheet" href="~/cmpnt/upload.css" />
 </head>
 <body>
 <div>
-    <p>Version @Model.ClientVersion</p>
-    <form method="post" class="submit-after-unify-uploads">
-        <unify-web-upload zone="MyUploadZone"/>
+    <form method="post" class="submit-after-unify-uploads" asp-for="FormSessionId">
+        <unify-web-upload zone="MyUploadZone" uploads="Model.Uploads"/>
         <input type="submit"/>
     </form>
+    
     @* <form method="post"> *@
     @* *@
     @*     <div class="mb-3"> *@

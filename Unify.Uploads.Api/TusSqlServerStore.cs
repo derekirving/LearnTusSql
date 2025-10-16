@@ -91,6 +91,9 @@ public class TusSqlServerStore : ITusStore,
         var zoneId = metadata.GetValue("zoneId");
         ArgumentException.ThrowIfNullOrEmpty(zoneId);
         
+        var sessionId = metadata.GetValue("sessionId");
+        ArgumentException.ThrowIfNullOrEmpty(sessionId);
+        
         var fileId = Guid.NewGuid().ToString("N");
         
         var filePath = GetFilePath(fileId);
@@ -105,14 +108,15 @@ public class TusSqlServerStore : ITusStore,
         await conn.OpenAsync(ct);
 
         var sql = @"
-            INSERT INTO TusFiles (FileId, ZoneId, AppId, UploadLength, UploadOffset, Metadata, CreatedAt)
-            VALUES (@FileId, @ZoneId, @AppId, @UploadLength, 0, @Metadata, @CreatedAt)";
+            INSERT INTO TusFiles (FileId, ZoneId, AppId, SessionId, UploadLength, UploadOffset, Metadata, CreatedAt)
+            VALUES (@FileId, @ZoneId, @AppId, @SessionId, @UploadLength, 0, @Metadata, @CreatedAt)";
 
         await conn.ExecuteAsync(sql, new
         {
             FileId = fileId,
             ZoneId = zoneId,
             AppId = appId,
+            SessionId = sessionId,
             UploadLength = uploadLength,
             Metadata = metadata,
             CreatedAt = DateTime.UtcNow
@@ -423,21 +427,21 @@ public class TusSqlServerStore : ITusStore,
 
     #region Session and Commit Management
 
-    public async Task AssociateFileWithSessionAsync(string fileId, string sessionId, CancellationToken ct)
-    {
-        await using var conn = new SqlConnection(_connectionString);
-
-        var sql = "UPDATE TusFiles SET SessionId = @SessionId WHERE FileId = @FileId";
-        await conn.ExecuteAsync(sql, new { SessionId = sessionId, FileId = fileId });
-    }
-    
-    public async Task SetAppIdAsync(string fileId, string appId, CancellationToken ct)
-    {
-        await using var conn = new SqlConnection(_connectionString);
-    
-        var sql = "UPDATE TusFiles SET AppId = @AppId WHERE FileId = @FileId";
-        await conn.ExecuteAsync(sql, new { AppId = appId, FileId = fileId });
-    }
+    // public async Task AssociateFileWithSessionAsync(string fileId, string sessionId, CancellationToken ct)
+    // {
+    //     await using var conn = new SqlConnection(_connectionString);
+    //
+    //     var sql = "UPDATE TusFiles SET SessionId = @SessionId WHERE FileId = @FileId";
+    //     await conn.ExecuteAsync(sql, new { SessionId = sessionId, FileId = fileId });
+    // }
+    //
+    // public async Task SetAppIdAsync(string fileId, string appId, CancellationToken ct)
+    // {
+    //     await using var conn = new SqlConnection(_connectionString);
+    //
+    //     var sql = "UPDATE TusFiles SET AppId = @AppId WHERE FileId = @FileId";
+    //     await conn.ExecuteAsync(sql, new { AppId = appId, FileId = fileId });
+    // }
 
     public async Task CommitFileAsync(string fileId, CancellationToken ct)
     {
@@ -499,21 +503,12 @@ public class TusSqlServerStore : ITusStore,
         FROM TusFiles 
         WHERE FileId = @FileId";
     
-        var fi = await conn.QuerySingleOrDefaultAsync(sql, new { FileId = fileId });
+        var fi = await conn.QuerySingleOrDefaultAsync<TusFileInfo>(sql, new { FileId = fileId });
         if (fi == null) return null;
         
-        return new TusFileInfo(
-            fi.FileId,
-            fi.Metadata.GetValue("fileName"),
-            fi.UploadLength,
-            fi.UploadOffset,
-            fi.Metadata,
-            fi.CreatedAt,
-            fi.ExpiresAt,
-            fi.SessionId,
-            fi.AppId,
-            fi.IsCommitted
-        );
+        fi.FileName = fi.Metadata.GetValue("name");
+        
+        return fi;
     }
 
     #endregion

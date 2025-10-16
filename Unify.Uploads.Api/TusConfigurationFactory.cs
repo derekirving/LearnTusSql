@@ -1,3 +1,5 @@
+using System.Net;
+
 namespace Unify.Uploads.Api;
 
 using System.Text;
@@ -27,17 +29,33 @@ public sealed class TusConfigurationFactory(ILogger<TusConfigurationFactory> log
             UsePipelinesIfAvailable = true,
             Events = new Events
             {
+                OnBeforeWriteAsync = async ctx =>
+                {
+                    var file = await ctx.GetFileAsync();
+                    var metadata = await file.GetMetadataAsync(ctx.CancellationToken);
+                    
+                    metadata.TryGetValue("name", out var fileName);
+                    metadata.TryGetValue("zoneId", out var zoneId);
+                    metadata.TryGetValue("sessionId", out var sessionId);
+                    metadata.TryGetValue("appId", out var appId);
+
+                    if (fileName == null || zoneId == null || sessionId == null || appId == null)
+                    {
+                        ctx.FailRequest(HttpStatusCode.BadRequest, "Validation Failed: MetaData missing");
+                        return;
+                    }
+                },
                 OnFileCompleteAsync = async ctx =>
                 {
                     var file = await ctx.GetFileAsync();
                     var metadata = await file.GetMetadataAsync(ctx.CancellationToken);
 
-                    if (metadata.TryGetValue("sessionId", out var sessionIdMeta))
-                    {
-                        var sessionId = sessionIdMeta.GetString(Encoding.UTF8);
-                        await store.AssociateFileWithSessionAsync(file.Id, sessionId, ctx.CancellationToken);
-                    }
-
+                    // if (metadata.TryGetValue("sessionId", out var sessionIdMeta))
+                    // {
+                    //     var sessionId = sessionIdMeta.GetString(Encoding.UTF8);
+                    //     await store.AssociateFileWithSessionAsync(file.Id, sessionId, ctx.CancellationToken);
+                    // }
+                    
                     // if (metadata.TryGetValue("appId", out var appIdMetadata))
                     // {
                     //     var appId = appIdMetadata.GetString(Encoding.UTF8);

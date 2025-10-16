@@ -5,11 +5,12 @@ namespace Unify.Web.Ui.Component.Upload;
 public interface IUnifyUploads
 {
     string ClientVersion();
+    string GenerateFormSessionId();
     int GetMinimumFiles(string zoneId);
     int GetMaximumFiles(string zoneId);
     int GetMaximumFileSize(string zoneId);
     List<string> GetAcceptedFileTypes(string zoneId);
-    Task<List<CommitedUploadResult>> CommitFilesAsync(List<string> fileIds, CancellationToken ct = default);
+    Task<List<CommitedUploadResult>> CommitFilesAsync(List<UnifyUploadFile> fileIds, CancellationToken ct = default);
 }
 
 public sealed class UnifyUploads(IConfiguration configuration, UnifyUploadsClient client) : IUnifyUploads
@@ -19,6 +20,11 @@ public sealed class UnifyUploads(IConfiguration configuration, UnifyUploadsClien
     public string ClientVersion()
     {
         return client.Version;
+    }
+
+    public string GenerateFormSessionId()
+    {
+        return Guid.NewGuid().ToString("n");
     }
     
     public int GetMinimumFiles(string zoneId)
@@ -45,7 +51,7 @@ public sealed class UnifyUploads(IConfiguration configuration, UnifyUploadsClien
             .ToList() ?? [];
     }
 
-    public async Task<List<CommitedUploadResult>> CommitFilesAsync(List<string> fileIds, CancellationToken ct = default)
+    public async Task<List<CommitedUploadResult>> CommitFilesAsync(List<UnifyUploadFile> fileIds, CancellationToken ct = default)
     {
         return await client.CommitFilesAsync(fileIds, ct);
     }

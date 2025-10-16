@@ -106,11 +106,20 @@ const uploadsInit = () => {
             }
         }
     };
+    
+    const appendHidden = (form, name, value) => {
+        const hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = name;
+        hidden.value = value;
+        form.appendChild(hidden);
+    }
 
-    const onSuccess = (payload, form, zone, submitBtn, file, url, event) => {
+    const onSuccess = (payload, form, zone, submitBtn, file, url, event, count) => {
         const {lastResponse} = payload;
         const contentLocation = lastResponse.getHeader('Content-Location');
 
+        console.log('onSuccess', {payload, form, zone, submitBtn, file, url, event, count})
         console.log('contentLocation', contentLocation);
 
         zone.dataset.fileCount--;
@@ -123,12 +132,12 @@ const uploadsInit = () => {
         if (fileInput) fileInput.value = '';
 
         const fileId = url.split("/").pop();
-
-        const hidden = document.createElement('input');
-        hidden.type = 'hidden';
-        hidden.name = 'fileId';
-        hidden.value = fileId;
-        form.appendChild(hidden);
+        
+        appendHidden(form, `Uploads[${count}].FileId`, fileId);
+        appendHidden(form, `Uploads[${count}].FileName`, file.name);
+        appendHidden(form, `Uploads[${count}].Size`, file.size);
+        appendHidden(form, `Uploads[${count}].Uri`, url);
+        appendHidden(form, `Uploads[${count}].Zone`, zone.dataset.zone);
 
         document.dispatchEvent(new CustomEvent('unify-upload-success', {
             detail: {form, zone: zone.dataset.zone, fileId, url, contentLocation, event},
@@ -142,16 +151,24 @@ const uploadsInit = () => {
     const performUpload = (form, submitBtn, zone, files, event) => {
         console.log("performUpload", form, submitBtn, zone, files, event);
 
+        const formSessionElem = form.querySelector('.unify-form-id');
+        if(!formSessionElem){
+            throw new Error("Unable to find form session");
+        }
+
+        const formSession = formSessionElem.value || formSessionElem.getAttribute('value');
+
         zone.classList.add('is-uploading');
+        
         const zoneId = zone.dataset.zone;
         const progressBar = zone.querySelector('.progress-bar');
 
-        for (const file of files) {
+        for (const [index, file] of files.entries()) {
             const upload = new tus.Upload(file,
                 {
                     endpoint: ENDPOINT,
                     retryDelays: [],
-                    onSuccess: (payload) => onSuccess(payload, form, zone, submitBtn, file, upload.url, event),
+                    onSuccess: (payload) => onSuccess(payload, form, zone, submitBtn, file, upload.url, event, index),
                     onProgress: (bytesUploaded, bytesTotal) => {
                         const percentage = ((bytesUploaded / bytesTotal) * 100).toFixed(2);
                         progressBar.style.width = percentage + '%';
@@ -162,6 +179,7 @@ const uploadsInit = () => {
                         contentType: file.type || 'application/octet-stream',
                         size: file.size,
                         zoneId: zoneId,
+                        sessionId: formSession,
                         appId: APP_ID
                     },
                     onError: (err) => {
