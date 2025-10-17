@@ -13,14 +13,17 @@ public class WebUploadsFormTagHelper : TagHelper
     [HtmlAttributeName("submit-after-unify-uploads")] public bool AutoSubmit { get; set; }
     public override void Process(TagHelperContext context, TagHelperOutput output)
     {
-        const string name = nameof(IUnifyUploadSession.UnifyUploadId);
+        const string name = nameof(IUnifyUploadSession.UploadSession.Id);
         
         var model = ViewContext?.ViewData.Model;
         ArgumentNullException.ThrowIfNull(model);
         
-        var propertyInfo = PropertyInfoCache.GetPropertyInfo(model.GetType(), name);
-        var value = propertyInfo?.GetValue(model);
-        
+        var sessionProperty = PropertyInfoCache.GetPropertyInfo(model.GetType(), nameof(IUnifyUploadSession.UploadSession));
+        var session = sessionProperty?.GetValue(model);
+        ArgumentNullException.ThrowIfNull(session);
+
+        var idProperty = PropertyInfoCache.GetPropertyInfo(session.GetType(), nameof(UnifyUploadSession.Id));
+        var value = idProperty?.GetValue(session);
         ArgumentNullException.ThrowIfNull(value);
 
         if (AutoSubmit)

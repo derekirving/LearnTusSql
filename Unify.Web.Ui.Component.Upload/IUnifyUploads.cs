@@ -10,6 +10,7 @@ public interface IUnifyUploads
     int GetMaximumFiles(string zoneId);
     int GetMaximumFileSize(string zoneId);
     List<string> GetAcceptedFileTypes(string zoneId);
+    Task<UnifyUploadSession> GetSessionAsync(string uploadId, CancellationToken cancellationToken = default);
     Task<List<CommitedUploadResult>> CommitFilesAsync(List<UnifyUploadFile> fileIds, CancellationToken cancellationToken = default);
     Task<List<UnifyUploadFile>> GetFilesBySessionAsync(string sessionId, CancellationToken cancellationToken = default);
     Task<bool> DeleteUpload(string fileId, CancellationToken cancellationToken = default);
@@ -50,6 +51,15 @@ public sealed class UnifyUploads(IConfiguration configuration, UnifyUploadsClien
         return accepted?.Split(',', StringSplitOptions.RemoveEmptyEntries)
             .Select(s => s.Trim())
             .ToList() ?? [];
+    }
+
+    public async Task<UnifyUploadSession> GetSessionAsync(string uploadId, CancellationToken cancellationToken = default)
+    {
+        return new UnifyUploadSession
+        {
+            Id = uploadId, 
+            Files = await GetFilesBySessionAsync(uploadId, cancellationToken)
+        };
     }
 
     public async Task<List<CommitedUploadResult>> CommitFilesAsync(List<UnifyUploadFile> fileIds, CancellationToken cancellationToken = default)

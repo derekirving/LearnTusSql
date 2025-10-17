@@ -56,8 +56,9 @@ public class WebUploadsTagHelper(
         var acceptedFileTypes = unifyUploads.GetAcceptedFileTypes(Zone);
         var displayAcceptedFileTypes = string.Join(",", acceptedFileTypes);
         
-        var propertyInfo = PropertyInfoCache.GetPropertyInfo(model.GetType(), nameof(IUnifyUploadSession.UnifyUploads));
-        var uploads = (List<UnifyUploadFile>)propertyInfo?.GetValue(model)!;
+        var propertyInfo = PropertyInfoCache.GetPropertyInfo(model.GetType(), nameof(IUnifyUploadSession.UploadSession));
+        var session = propertyInfo?.GetValue(model) as UnifyUploadSession;
+        var uploads = session?.Files ?? [];
         
         var pathBase = ViewContext!.HttpContext.Request.PathBase.Value;
         
@@ -117,14 +118,28 @@ public class WebUploadsTagHelper(
                     var deleteListHtml = new StringBuilder();
                     if (!string.IsNullOrEmpty(href))
                     {
-                        deleteListHtml.AppendLine($"""
-                                                   <a data-file-name="{meta.FileName}" class="zone__remove-file" title="Delete this file" aria-label="Remove File" href="{href}">
-                                                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
-                                                            xmlns="http://www.w3.org/2000/svg">
-                                                           <line x1="4" y1="4" x2="12" y2="12" stroke="red" stroke-width="2"/>
-                                                           <line x1="12" y1="4" x2="4" y2="12" stroke="red" stroke-width="2"/>
-                                                       </svg></a>
-                                                   """);
+                        if (ViewContext?.ModelState.IsValid == false)
+                        {
+                            deleteListHtml.AppendLine($"""
+                                                       <a data-file-name="{meta.FileName}" class="zone__remove-file validation-failed" title="You must fix other issues before deleting files" aria-label="Remove File" href="#">
+                                                           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                                                                xmlns="http://www.w3.org/2000/svg">
+                                                               <line x1="4" y1="4" x2="12" y2="12" stroke="gray" stroke-width="2"/>
+                                                               <line x1="12" y1="4" x2="4" y2="12" stroke="gray" stroke-width="2"/>
+                                                           </svg></a>
+                                                       """);
+                        }
+                        else
+                        {
+                            deleteListHtml.AppendLine($"""
+                                                       <a data-file-name="{meta.FileName}" class="zone__remove-file" title="Delete this file" aria-label="Remove File" href="{href}">
+                                                           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                                                                xmlns="http://www.w3.org/2000/svg">
+                                                               <line x1="4" y1="4" x2="12" y2="12" stroke="red" stroke-width="2"/>
+                                                               <line x1="12" y1="4" x2="4" y2="12" stroke="red" stroke-width="2"/>
+                                                           </svg></a>
+                                                       """);
+                        }
                     }
 
                     fileListHtml.AppendLine($"""
@@ -155,14 +170,24 @@ public class WebUploadsTagHelper(
             var sb = new StringBuilder();
             foreach (var item in zonedUploads)
             {
-                sb.AppendLine($"<input type=\"hidden\" name=\"fileId\" value='{item.FileId}' />");
+                //sb.AppendLine($"<input type=\"hidden\" name=\"fileId\" value='{item.FileId}' />");
+                
+                for (int i = 0; i < zonedUploads.Count; i++)
+                {
+                    var file = zonedUploads[i];
+                    sb.AppendLine($@"<input type=""hidden"" name=""UploadSession.Files[{i}].FileId"" value=""{file.FileId}"" />");
+                    sb.AppendLine($@"<input type=""hidden"" name=""UploadSession.Files[{i}].FileName"" value=""{file.FileName}"" />");
+                    sb.AppendLine($@"<input type=""hidden"" name=""UploadSession.Files[{i}].Zone"" value=""{file.Zone}"" />");
+                    sb.AppendLine($@"<input type=""hidden"" name=""UploadSession.Files[{i}].Size"" value=""{file.Size}"" />");
+                    sb.AppendLine($@"<input type=""hidden"" name=""UploadSession.Files[{i}].Uri"" value=""{file.Uri}"" />");
+                }
             }
             
             previousFiles = sb.ToString();
         }
 
         var html = $$"""
-                             <div class="{{useClass}}" data-zone="{{Zone}}" data-dto=""{{nameof(IUnifyUploadSession.UnifyUploads)}}" data-accepted="{{displayAcceptedFileTypes}}" data-max-files="{{maxFiles}}" data-min-files="{{minFiles}}" data-max-file-size="{{maxSize}}" data-file-count="{{uploads?.Count ?? 0}}">
+                             <div class="{{useClass}}" data-zone="{{Zone}}" data-dto="UploadSession.Files" data-accepted="{{displayAcceptedFileTypes}}" data-max-files="{{maxFiles}}" data-min-files="{{minFiles}}" data-max-file-size="{{maxSize}}" data-file-count="{{uploads?.Count ?? 0}}">
                                  <div class="zone__input">
                                      <svg class="zone__icon" xmlns="http://www.w3.org/2000/svg" width="50" height="43" viewBox="0 0 50 43">
                                          <path d="M48.4 26.5c-.9 0-1.7.7-1.7 1.7v11.6h-43.3v-11.6c0-.9-.7-1.7-1.7-1.7s-1.7.7-1.7 1.7v13.2c0 .9.7 1.7 1.7 1.7h46.7c.9 0 1.7-.7 1.7-1.7v-13.2c0-1-.7-1.7-1.7-1.7zm-24.5 6.1c.3.3.8.5 1.2.5.4 0 .9-.2 1.2-.5l10-11.6c.7-.7.7-1.7 0-2.4s-1.7-.7-2.4 0l-7.1 8.3v-25.3c0-.9-.7-1.7-1.7-1.7s-1.7.7-1.7 1.7v25.3l-7.1-8.3c-.7-.7-1.7-.7-2.4 0s-.7 1.7 0 2.4l10 11.6z"/>

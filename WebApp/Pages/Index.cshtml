@@ -15,9 +15,16 @@
 <body>
 <div>
     <form method="post" class="mb-2" submit-after-unify-uploads="true">
-        <input asp-for="Post.PostTitle"/>
+        <div class="mb-3">
+            <label asp-for="Post.PostTitle"></label>
+            <input class="form-control" asp-for="Post.PostTitle"/>
+            <span class="text-danger" asp-validation-for="Post.PostTitle"></span>
+        </div>
+        
+        <p data-for="MyUploadZone">Upload assignment files</p>
         <unify-web-upload zone="MyUploadZone" asp-page="/Index" asp-page-delete-handler="Delete"/>
-        <input type="submit"/>
+        
+        <input class="btn btn-primary" type="submit"/>
     </form>
 </div>
 

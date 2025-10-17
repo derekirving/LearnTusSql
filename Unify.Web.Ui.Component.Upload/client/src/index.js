@@ -60,6 +60,13 @@ const uploadsInit = () => {
         document.body.addEventListener('htmx:confirm', function (event) {
             if (event.target.classList.contains('zone__remove-file') && isHtmxElem(event)) {
                 event.preventDefault();
+                
+                if(event.target.classList.contains('validation-failed'))
+                {
+                    alert("Please fix other form validation issues first");
+                    return false;
+                }
+                
                 const fileName = event.target.dataset.fileName;
                 if (confirm(`Really delete ${fileName}?`)) {
                     event.detail.issueRequest();
@@ -70,11 +77,18 @@ const uploadsInit = () => {
     }
 
     document.querySelectorAll('.zone__remove-file').forEach((element) => {
-        element.addEventListener('click', (e) => {
+        element.addEventListener('click', (event) => {
             const fileName = element.dataset.fileName;
 
             if (!window.htmx) {
-                e.preventDefault();
+                event.preventDefault();
+
+                if(element.classList.contains('validation-failed'))
+                {
+                    alert("Please fix other form validation issues first");
+                    return false;
+                }
+                
                 if (confirm(`Really delete ${fileName}?`)) {
                     window.location.href = element.href;
                 }
@@ -115,12 +129,19 @@ const uploadsInit = () => {
         form.appendChild(hidden);
     }
 
-    const onSuccess = (payload, form, zone, submitBtn, file, url, event, count) => {
+    const onSuccess = (payload, form, zone, submitBtn, file, url, event, count, upload) => {
         const {lastResponse} = payload;
         const contentLocation = lastResponse.getHeader('Content-Location');
 
-        console.log('onSuccess', {payload, form, zone, submitBtn, file, url, event, count})
+        console.log('onSuccess', {payload, form, zone, submitBtn, file, url, event, count, upload});
         console.log('contentLocation', contentLocation);
+
+        // This is a manual version of removeFingerprintOnSuccess: true
+        // upload.findPreviousUploads().then((previousUploads) => {
+        //     previousUploads.forEach(upload => {
+        //         localStorage.removeItem(upload.urlStorageKey);
+        //     })
+        // });
         
         const dto  = zone.dataset.dto;
 
@@ -175,7 +196,8 @@ const uploadsInit = () => {
                 {
                     endpoint: ENDPOINT,
                     retryDelays: [],
-                    onSuccess: (payload) => onSuccess(payload, form, zone, submitBtn, file, upload.url, event, index),
+                    removeFingerprintOnSuccess: true,
+                    onSuccess: (payload) => onSuccess(payload, form, zone, submitBtn, file, upload.url, event, index, upload),
                     onProgress: (bytesUploaded, bytesTotal) => {
                         const percentage = ((bytesUploaded / bytesTotal) * 100).toFixed(2);
                         progressBar.style.width = percentage + '%';
