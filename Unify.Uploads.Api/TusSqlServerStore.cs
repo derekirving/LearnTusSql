@@ -4,6 +4,7 @@ using Microsoft.Data.SqlClient;
 using tusdotnet.Interfaces;
 using tusdotnet.Models.Concatenation;
 using Unify.Encryption;
+using Unify.Web.Ui.Component.Upload;
 
 namespace Unify.Uploads.Api;
 
@@ -47,6 +48,7 @@ public class TusSqlServerStore : ITusStore,
                                    BEGIN
                                        CREATE TABLE TusFiles (
                                            FileId NVARCHAR(50) PRIMARY KEY,
+                                           FileName NVARCHAR(50) NOT NULL,
                                            UploadLength BIGINT NULL,
                                            UploadOffset BIGINT NOT NULL DEFAULT 0,
                                            Metadata NVARCHAR(MAX) NULL,
@@ -54,14 +56,14 @@ public class TusSqlServerStore : ITusStore,
                                            ExpiresAt DATETIME2 NULL,
                                            UploadConcat NVARCHAR(20) NULL,
                                            PartialUploads NVARCHAR(MAX) NULL,
-                                           SessionId NVARCHAR(50) NULL,
+                                           UploadId NVARCHAR(50) NULL,
                                            ZoneId NVARCHAR(50) NULL,
                                            AppId NVARCHAR(50) NULL,
                                            IsCommitted BIT NOT NULL DEFAULT 0
                                        );
 
                                        CREATE INDEX IX_TusFiles_ExpiresAt ON TusFiles(ExpiresAt) WHERE ExpiresAt IS NOT NULL;
-                                       CREATE INDEX IX_TusFiles_SessionId ON TusFiles(SessionId, IsCommitted) WHERE SessionId IS NOT NULL;
+                                       CREATE INDEX IX_TusFiles_UploadId ON TusFiles(UploadId, IsCommitted) WHERE UploadId IS NOT NULL;
                                        CREATE INDEX IX_TusFiles_ZoneId ON TusFiles(ZoneId, IsCommitted) WHERE ZoneId IS NOT NULL;
                                        CREATE INDEX IX_TusFiles_AppId ON TusFiles(AppId) WHERE AppId IS NOT NULL;
                                        CREATE INDEX IX_TusFiles_Uncommitted ON TusFiles(CreatedAt) WHERE IsCommitted = 0;
@@ -91,14 +93,14 @@ public class TusSqlServerStore : ITusStore,
         var zoneId = metadata.GetValue("zoneId");
         ArgumentException.ThrowIfNullOrEmpty(zoneId);
         
-        var sessionId = metadata.GetValue("sessionId");
-        ArgumentException.ThrowIfNullOrEmpty(sessionId);
+        var uploadId = metadata.GetValue("uploadId");
+        ArgumentException.ThrowIfNullOrEmpty(uploadId);
+        
+        var fileName = metadata.GetValue("name");
         
         var fileId = Guid.NewGuid().ToString("N");
-        
         var filePath = GetFilePath(fileId);
-
-        // Create empty file
+        // Create empty file (tus spec)
         await using (File.Create(filePath))
         {
             
@@ -108,15 +110,16 @@ public class TusSqlServerStore : ITusStore,
         await conn.OpenAsync(ct);
 
         var sql = @"
-            INSERT INTO TusFiles (FileId, ZoneId, AppId, SessionId, UploadLength, UploadOffset, Metadata, CreatedAt)
-            VALUES (@FileId, @ZoneId, @AppId, @SessionId, @UploadLength, 0, @Metadata, @CreatedAt)";
+            INSERT INTO TusFiles (FileId, FileName, ZoneId, AppId, UploadId, UploadLength, UploadOffset, Metadata, CreatedAt)
+            VALUES (@FileId, @FileName, @ZoneId, @AppId, @UploadId, @UploadLength, 0, @Metadata, @CreatedAt)";
 
         await conn.ExecuteAsync(sql, new
         {
             FileId = fileId,
+            FileName = fileName,
             ZoneId = zoneId,
             AppId = appId,
-            SessionId = sessionId,
+            UploadId = uploadId,
             UploadLength = uploadLength,
             Metadata = metadata,
             CreatedAt = DateTime.UtcNow
@@ -427,12 +430,12 @@ public class TusSqlServerStore : ITusStore,
 
     #region Session and Commit Management
 
-    // public async Task AssociateFileWithSessionAsync(string fileId, string sessionId, CancellationToken ct)
+    // public async Task AssociateFileWithSessionAsync(string fileId, string uploadId, CancellationToken ct)
     // {
     //     await using var conn = new SqlConnection(_connectionString);
     //
-    //     var sql = "UPDATE TusFiles SET SessionId = @SessionId WHERE FileId = @FileId";
-    //     await conn.ExecuteAsync(sql, new { SessionId = sessionId, FileId = fileId });
+    //     var sql = "UPDATE TusFiles SET UploadId = @UploadId WHERE FileId = @FileId";
+    //     await conn.ExecuteAsync(sql, new { UploadId = uploadId, FileId = fileId });
     // }
     //
     // public async Task SetAppIdAsync(string fileId, string appId, CancellationToken ct)
@@ -451,15 +454,33 @@ public class TusSqlServerStore : ITusStore,
         await conn.ExecuteAsync(sql, new { FileId = fileId });
     }
 
-    public async Task<List<string>> GetFilesBySessionAsync(string sessionId, CancellationToken ct)
+    public async Task<List<UnifyUploadFile>> GetFilesBySessionAsync(string uploadId, CancellationToken ct)
     {
         await using var conn = new SqlConnection(_connectionString);
 
-        var sql = "SELECT FileId FROM TusFiles WHERE SessionId = @SessionId";
-        var result = await conn.QueryAsync<string>(sql, new { SessionId = sessionId });
+        var sql = @"
+        SELECT 
+            FileId, 
+            FileName, 
+            ZoneId AS Zone, 
+            CAST(UploadLength AS INT) AS Size
+        FROM TusFiles 
+        WHERE UploadId = @UploadId";
 
-        return result.ToList();
+        var files = (await conn.QueryAsync(sql, new { UploadId = uploadId }))
+            .Select(row => new UnifyUploadFile
+            {
+                FileId = row.FileId,
+                FileName = row.FileName,
+                Zone = row.Zone,
+                Size = row.Size,
+                Uri = new Uri($"https://domain.com/{row.FileId}")
+            })
+            .ToList();
+
+        return files;
     }
+
 
     public async Task<int> CleanupUncommittedFilesAsync(TimeSpan olderThan, CancellationToken ct)
     {
@@ -497,7 +518,7 @@ public class TusSqlServerStore : ITusStore,
             Metadata,
             CreatedAt,
             ExpiresAt,
-            SessionId,
+            UploadId,
             AppId,
             IsCommitted
         FROM TusFiles 

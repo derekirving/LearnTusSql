@@ -34,9 +34,9 @@ public class UnifyUploadsClient(HttpClient httpClient)
 
 
 
-    internal async Task<List<string>> GetFilesBySessionAsync(string sessionId, CancellationToken ct = default)
+    internal async Task<List<UnifyUploadFile>> GetFilesBySessionAsync(string sessionId, CancellationToken ct = default)
     {
-        var response = await httpClient.GetFromJsonAsync<List<string>>(
+        var response = await httpClient.GetFromJsonAsync<List<UnifyUploadFile>>(
             $"/api/sessions/{sessionId}/files",
             ct);
 

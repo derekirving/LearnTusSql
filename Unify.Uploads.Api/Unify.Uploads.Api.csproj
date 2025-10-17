@@ -15,6 +15,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Unify.Encryption\Unify.Encryption.csproj" />
+      <ProjectReference Include="..\Unify.Web.Ui.Component.Upload\Unify.Web.Ui.Component.Upload.csproj" />
       <ProjectReference Include="..\Unify\Unify.csproj" />
     </ItemGroup>
 

@@ -1,17 +1,43 @@
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 
 namespace Unify.Web.Ui.Component.Upload.TagHelpers;
 
 using Microsoft.AspNetCore.Razor.TagHelpers;
 
-[HtmlTargetElement("form", Attributes = "asp-for")]
-public class CustomFormTagHelper : TagHelper
+[HtmlTargetElement("form", Attributes = "submit-after-unify-uploads")]
+
+public class WebUploadsFormTagHelper : TagHelper
 {
-    [HtmlAttributeName("asp-for")] public required ModelExpression For { get; set; }
-    
+    [ViewContext] [HtmlAttributeNotBound] public ViewContext? ViewContext { get; set; }
+    [HtmlAttributeName("submit-after-unify-uploads")] public bool AutoSubmit { get; set; }
     public override void Process(TagHelperContext context, TagHelperOutput output)
     {
-        var hiddenInput = $"<input class='unify-form-id' type=\"hidden\" name=\"{For.Name}\" value=\"{For.Model}\" />";
+        const string name = nameof(IUnifyUploadSession.UnifyUploadId);
+        
+        var model = ViewContext?.ViewData.Model;
+        ArgumentNullException.ThrowIfNull(model);
+        
+        var propertyInfo = PropertyInfoCache.GetPropertyInfo(model.GetType(), name);
+        var value = propertyInfo?.GetValue(model);
+        
+        ArgumentNullException.ThrowIfNull(value);
+
+        if (AutoSubmit)
+        {
+            const string customClass = "submit-after-unify-uploads";
+            
+            var classAttr = output.Attributes["class"];
+            var existingClasses = classAttr?.Value?.ToString() ?? string.Empty;
+            
+            var newClasses = string.IsNullOrWhiteSpace(existingClasses)
+                ? customClass
+                : $"{existingClasses} {customClass}";
+            
+            output.Attributes.SetAttribute("class", newClasses);
+        }
+        
+        var hiddenInput = $"<input class='unify-upload-id' type=\"hidden\" name=\"{name}\" value=\"{value}\" />";
         output.PostContent.AppendHtml(hiddenInput);
     }
 }

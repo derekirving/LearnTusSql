@@ -5,12 +5,14 @@ namespace Unify.Web.Ui.Component.Upload;
 public interface IUnifyUploads
 {
     string ClientVersion();
-    string GenerateFormSessionId();
+    string GenerateUploadId();
     int GetMinimumFiles(string zoneId);
     int GetMaximumFiles(string zoneId);
     int GetMaximumFileSize(string zoneId);
     List<string> GetAcceptedFileTypes(string zoneId);
-    Task<List<CommitedUploadResult>> CommitFilesAsync(List<UnifyUploadFile> fileIds, CancellationToken ct = default);
+    Task<List<CommitedUploadResult>> CommitFilesAsync(List<UnifyUploadFile> fileIds, CancellationToken cancellationToken = default);
+    Task<List<UnifyUploadFile>> GetFilesBySessionAsync(string sessionId, CancellationToken cancellationToken = default);
+    Task<bool> DeleteUpload(string fileId, CancellationToken cancellationToken = default);
 }
 
 public sealed class UnifyUploads(IConfiguration configuration, UnifyUploadsClient client) : IUnifyUploads
@@ -22,14 +24,13 @@ public sealed class UnifyUploads(IConfiguration configuration, UnifyUploadsClien
         return client.Version;
     }
 
-    public string GenerateFormSessionId()
+    public string GenerateUploadId()
     {
         return Guid.NewGuid().ToString("n");
     }
     
     public int GetMinimumFiles(string zoneId)
     {
-        var v = client.Version;
         return configuration.GetValue<int>($"{SecName}{zoneId}:MinFiles");
     }
     
@@ -51,8 +52,18 @@ public sealed class UnifyUploads(IConfiguration configuration, UnifyUploadsClien
             .ToList() ?? [];
     }
 
-    public async Task<List<CommitedUploadResult>> CommitFilesAsync(List<UnifyUploadFile> fileIds, CancellationToken ct = default)
+    public async Task<List<CommitedUploadResult>> CommitFilesAsync(List<UnifyUploadFile> fileIds, CancellationToken cancellationToken = default)
     {
-        return await client.CommitFilesAsync(fileIds, ct);
+        return await client.CommitFilesAsync(fileIds, cancellationToken);
+    }
+
+    public async Task<List<UnifyUploadFile>> GetFilesBySessionAsync(string sessionId, CancellationToken cancellationToken = default)
+    {
+        return await client.GetFilesBySessionAsync(sessionId, cancellationToken);
+    }
+
+    public async Task<bool> DeleteUpload(string fileId, CancellationToken cancellationToken = default)
+    {
+        return  await client.DeleteFileAsync(fileId, cancellationToken);
     }
 }

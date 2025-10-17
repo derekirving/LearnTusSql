@@ -121,10 +121,17 @@ const uploadsInit = () => {
 
         console.log('onSuccess', {payload, form, zone, submitBtn, file, url, event, count})
         console.log('contentLocation', contentLocation);
+        
+        const dto  = zone.dataset.dto;
 
         zone.dataset.fileCount--;
 
-        zone.classList.add('is-success');
+        if (form.classList.contains('submit-after-unify-uploads')) {
+            zone.classList.add('is-success');
+        }else{
+            submitBtn.disabled = false;
+        }
+        
         zone.classList.remove('is-uploading');
         zone.classList.remove('is-error');
 
@@ -133,11 +140,11 @@ const uploadsInit = () => {
 
         const fileId = url.split("/").pop();
         
-        appendHidden(form, `Uploads[${count}].FileId`, fileId);
-        appendHidden(form, `Uploads[${count}].FileName`, file.name);
-        appendHidden(form, `Uploads[${count}].Size`, file.size);
-        appendHidden(form, `Uploads[${count}].Uri`, url);
-        appendHidden(form, `Uploads[${count}].Zone`, zone.dataset.zone);
+        appendHidden(form, `${dto}[${count}].FileId`, fileId);
+        appendHidden(form, `${dto}[${count}].FileName`, file.name);
+        appendHidden(form, `${dto}[${count}].Size`, file.size);
+        appendHidden(form, `${dto}[${count}].Uri`, url);
+        appendHidden(form, `${dto}[${count}].Zone`, zone.dataset.zone);
 
         document.dispatchEvent(new CustomEvent('unify-upload-success', {
             detail: {form, zone: zone.dataset.zone, fileId, url, contentLocation, event},
@@ -151,12 +158,12 @@ const uploadsInit = () => {
     const performUpload = (form, submitBtn, zone, files, event) => {
         console.log("performUpload", form, submitBtn, zone, files, event);
 
-        const formSessionElem = form.querySelector('.unify-form-id');
-        if(!formSessionElem){
-            throw new Error("Unable to find form session");
+        const uploadIdElem = form.querySelector('.unify-upload-id');
+        if(!uploadIdElem){
+            throw new Error("Unable to find unify upload id on form");
         }
 
-        const formSession = formSessionElem.value || formSessionElem.getAttribute('value');
+        const uploadId = uploadIdElem.value || uploadIdElem.getAttribute('value');
 
         zone.classList.add('is-uploading');
         
@@ -179,7 +186,7 @@ const uploadsInit = () => {
                         contentType: file.type || 'application/octet-stream',
                         size: file.size,
                         zoneId: zoneId,
-                        sessionId: formSession,
+                        uploadId: uploadId,
                         appId: APP_ID
                     },
                     onError: (err) => {

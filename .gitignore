@@ -486,3 +486,4 @@ $RECYCLE.BIN/
 artifacts/
 Unify.Web.Ui.Component.Upload/Files/**
 WebApp/wwwroot/cmpnt/**
+WebApp/App_Data/**

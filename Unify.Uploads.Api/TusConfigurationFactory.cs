@@ -36,10 +36,10 @@ public sealed class TusConfigurationFactory(ILogger<TusConfigurationFactory> log
                     
                     metadata.TryGetValue("name", out var fileName);
                     metadata.TryGetValue("zoneId", out var zoneId);
-                    metadata.TryGetValue("sessionId", out var sessionId);
+                    metadata.TryGetValue("uploadId", out var uploadId);
                     metadata.TryGetValue("appId", out var appId);
 
-                    if (fileName == null || zoneId == null || sessionId == null || appId == null)
+                    if (fileName == null || zoneId == null || uploadId == null || appId == null)
                     {
                         ctx.FailRequest(HttpStatusCode.BadRequest, "Validation Failed: MetaData missing");
                         return;
