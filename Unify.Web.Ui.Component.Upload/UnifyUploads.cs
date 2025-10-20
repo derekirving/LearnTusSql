@@ -1,8 +1,10 @@
+#if RELEASE
+
 using Microsoft.Extensions.Configuration;
+using Unify.Web.Ui.Component.Upload.Interfaces;
+using Unify.Web.Ui.Component.Upload.Models;
 
 namespace Unify.Web.Ui.Component.Upload;
-
-#if RELEASE
 public sealed class UnifyUploads(IConfiguration configuration, UnifyUploadsClient client) : IUnifyUploads
 {
     private const string SecName = "Unify:Uploads:Zones:";

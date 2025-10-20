@@ -41,9 +41,9 @@ public static class ServiceCollectionExtensions
             return new TusSqliteStore(dbPath, uploadsDirectory);
         });
         
-        AddHttpClient<UnifyUploadsClientDev>(services, "http://localhost", secret, encryptedId, timeoutMinutes);
-        services.AddTransient<IUnifyUploadsClient>(sp => sp.GetRequiredService<UnifyUploadsClientDev>());
-        
+        //AddHttpClient<UnifyUploadsClientDev>(services, "http://localhost", secret, encryptedId, timeoutMinutes);
+        //services.AddTransient<IUnifyUploadsClient>(sp => sp.GetRequiredService<UnifyUploadsClientDev>());
+        services.AddTransient<IUnifyUploadsClient, UnifyUploadsClientDev>();
         services.AddSingleton<IUnifyUploads, UnifyUploadsDev>();
 #else
         var baseUrl = configuration["Unify:Uploads:BaseUrl"];
@@ -55,18 +55,9 @@ public static class ServiceCollectionExtensions
             o.EncryptedAppId = encryptedId;
         });
 
-        AddHttpClient<UnifyUploadsClient>(services, baseUrl, secret, encryptedId, timeoutMinutes);
-        services.AddTransient<IUnifyUploadsClient>(sp => sp.GetRequiredService<UnifyUploadsClient>());
-        services.AddSingleton<IUnifyUploads, UnifyUploads>();
-#endif
-
-        services.AddTransient<ITagHelperComponent, WebUploadsTagHelperComponent>();
-        return services;
-    }
-
-    private static void AddHttpClient<T>(IServiceCollection services, string baseUrl, string secret, string encryptedId, double timeoutMinutes) where T : class
-    {
-        services.AddHttpClient<T>(client =>
+        //AddHttpClient<UnifyUploadsClient>(services, baseUrl, secret, encryptedId, timeoutMinutes);
+        
+        services.AddHttpClient<UnifyUploadsClient>(client =>
         {
             ArgumentException.ThrowIfNullOrEmpty(baseUrl);
 
@@ -75,5 +66,25 @@ public static class ServiceCollectionExtensions
             client.BaseAddress = new Uri(baseUrl);
             client.Timeout = TimeSpan.FromMinutes(timeoutMinutes);
         });
+        
+        services.AddTransient<IUnifyUploadsClient>(sp => sp.GetRequiredService<UnifyUploadsClient>());
+        services.AddSingleton<IUnifyUploads, UnifyUploads>();
+#endif
+
+        services.AddTransient<ITagHelperComponent, WebUploadsTagHelperComponent>();
+        return services;
     }
+
+    // private static void AddHttpClient<T>(IServiceCollection services, string baseUrl, string secret, string encryptedId, double timeoutMinutes) where T : class
+    // {
+    //     services.AddHttpClient<T>(client =>
+    //     {
+    //         ArgumentException.ThrowIfNullOrEmpty(baseUrl);
+    //
+    //         client.DefaultRequestHeaders.Add(AuthConstants.ApiKeyHeaderName, secret);
+    //         client.DefaultRequestHeaders.Add(AuthConstants.UnifyAppIdHeaderName, encryptedId);
+    //         client.BaseAddress = new Uri(baseUrl);
+    //         client.Timeout = TimeSpan.FromMinutes(timeoutMinutes);
+    //     });
+    // }
 }

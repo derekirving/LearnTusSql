@@ -1,10 +1,11 @@
+#if DEBUG
+
 using Unify.Web.Ui.Component.Upload.Interfaces;
 using Unify.Web.Ui.Component.Upload.Models;
 
-#if DEBUG
 namespace Unify.Web.Ui.Component.Upload;
 
-public class UnifyUploadsClientDev(HttpClient httpClient) : IUnifyUploadsClient
+public class UnifyUploadsClientDev : IUnifyUploadsClient
 {
     public string Version { get; }
     public async Task<List<CommitedUploadResult>> CommitFilesAsync(List<UnifyUploadFile> fileIds, CancellationToken ct = default)

@@ -1,5 +1,7 @@
 #if RELEASE
 using System.Net.Http.Json;
+using Unify.Web.Ui.Component.Upload.Interfaces;
+using Unify.Web.Ui.Component.Upload.Models;
 
 namespace Unify.Web.Ui.Component.Upload;
 
