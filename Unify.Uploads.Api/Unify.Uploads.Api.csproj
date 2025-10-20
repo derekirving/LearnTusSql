@@ -9,7 +9,6 @@
     <ItemGroup>
         <PackageReference Include="Dapper" />
         <PackageReference Include="Microsoft.Data.SqlClient" />
-<!--        <PackageReference Include="Microsoft.Data.Sqlite" Version="6.0.5"/>-->
         <PackageReference Include="tusdotnet" />
     </ItemGroup>
 

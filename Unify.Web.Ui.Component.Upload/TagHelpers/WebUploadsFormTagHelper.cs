@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Unify.Web.Ui.Component.Upload.Interfaces;
+using Unify.Web.Ui.Component.Upload.Models;
 
 namespace Unify.Web.Ui.Component.Upload.TagHelpers;
 

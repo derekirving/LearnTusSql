@@ -1,4 +1,4 @@
-namespace Unify.Web.Ui.Component.Upload;
+namespace Unify.Web.Ui.Component.Upload.Models;
 
 public class UnifyUploadFile
 {

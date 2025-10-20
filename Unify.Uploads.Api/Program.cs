@@ -3,6 +3,8 @@ using Unify;
 using Unify.Encryption;
 using Unify.Uploads.Api;
 using Unify.Uploads.Api.Authentication;
+using Unify.Web.Ui.Component.Upload;
+using Unify.Web.Ui.Component.Upload.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddUnifyConfiguration();

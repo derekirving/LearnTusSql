@@ -1,3 +1,4 @@
+#if DEBUG
 using System.Security.Cryptography;
 using Microsoft.Data.Sqlite;
 using tusdotnet.Interfaces;
@@ -461,3 +462,4 @@ public class TusSqliteStore :
         }
     }
 }
+#endif

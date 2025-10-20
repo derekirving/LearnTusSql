@@ -1,4 +1,6 @@
-namespace Unify.Web.Ui.Component.Upload;
+using Unify.Web.Ui.Component.Upload.Interfaces;
+
+namespace Unify.Web.Ui.Component.Upload.Models;
 
 public class UnifyUploadSession
 {

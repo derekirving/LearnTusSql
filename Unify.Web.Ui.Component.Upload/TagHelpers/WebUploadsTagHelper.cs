@@ -1,3 +1,4 @@
+
 using System.Text;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
@@ -5,6 +6,9 @@ using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
+using Unify.Web.Ui.Component.Upload.Exceptions;
+using Unify.Web.Ui.Component.Upload.Interfaces;
+using Unify.Web.Ui.Component.Upload.Models;
 
 namespace Unify.Web.Ui.Component.Upload.TagHelpers;
 
@@ -13,7 +17,7 @@ public class WebUploadsTagHelper(
     IOptions<UnifyUploadOptions> uploadOptions, 
     IUnifyUploads unifyUploads,
     LinkGenerator linkGenerator,
-    UnifyUploadsClient client) : TagHelper
+    IUnifyUploadsClient client) : TagHelper
 {
     public required string Zone { get; set; }
 

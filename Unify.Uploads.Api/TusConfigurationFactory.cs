@@ -1,16 +1,12 @@
 using System.Net;
+using Unify.Web.Ui.Component.Upload;
+using Unify.Web.Ui.Component.Upload.Interfaces;
 
 namespace Unify.Uploads.Api;
 
-using System.Text;
 using Microsoft.Extensions.Logging;
 using tusdotnet.Models;
 using tusdotnet.Models.Configuration;
-
-public interface ITusConfigurationFactory
-{
-    DefaultTusConfiguration Create(HttpContext httpContext);
-}
 
 public sealed class TusConfigurationFactory(ILogger<TusConfigurationFactory> logger) : ITusConfigurationFactory
 {

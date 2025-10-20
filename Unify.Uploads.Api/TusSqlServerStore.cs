@@ -5,6 +5,7 @@ using tusdotnet.Interfaces;
 using tusdotnet.Models.Concatenation;
 using Unify.Encryption;
 using Unify.Web.Ui.Component.Upload;
+using Unify.Web.Ui.Component.Upload.Models;
 
 namespace Unify.Uploads.Api;
 

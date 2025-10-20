@@ -6,10 +6,21 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+        <DefineConstants>DEBUG</DefineConstants>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+        <DefineConstants>RELEASE</DefineConstants>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+        <PackageReference Include="Microsoft.Data.Sqlite" />
+    </ItemGroup>
+
     <ItemGroup>
         <PackageReference Include="Dapper" />
         <PackageReference Include="Microsoft.Data.SqlClient"/>
-<!--        <PackageReference Include="Microsoft.Data.Sqlite" />-->
         <PackageReference Include="tusdotnet" />
     </ItemGroup>
 

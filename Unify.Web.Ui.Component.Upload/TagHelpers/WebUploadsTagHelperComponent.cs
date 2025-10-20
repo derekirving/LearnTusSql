@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.Extensions.Options;
+using Unify.Web.Ui.Component.Upload.Models;
 
 namespace Unify.Web.Ui.Component.Upload.TagHelpers;
 
@@ -11,6 +12,9 @@ public class WebUploadsTagHelperComponent(IOptions<UnifyUploadOptions> options) 
 
         if (string.Equals(output.TagName, "head", StringComparison.OrdinalIgnoreCase))
         {
+#if DEBUG
+            output.PostContent.AppendHtml("<!-- Unify Uploads running in DEBUG mode -->" + Environment.NewLine);
+#endif
             var baseUrl = options.Value.BaseUrl;
             output.PostContent.AppendHtml($"<meta name=\"unify-upload-baseUrl\" content=\"{baseUrl}\" />{Environment.NewLine}");
             
