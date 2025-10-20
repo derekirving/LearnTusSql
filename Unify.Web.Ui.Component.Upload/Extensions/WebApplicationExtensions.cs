@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using tusdotnet;
 using Unify.Web.Ui.Component.Upload.Interfaces;
 
+// ReSharper disable once CheckNamespace
 namespace Unify.Web.Ui.Component.Upload;
 
 public static class WebApplicationExtensions

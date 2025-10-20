@@ -11,6 +11,7 @@ using Unify.Web.Ui.Component.Upload.TagHelpers;
 using Unify.Web.Ui.Component.Upload.Stores;
 #endif
 
+// ReSharper disable once CheckNamespace
 namespace Unify.Web.Ui.Component.Upload;
 
 public static class ServiceCollectionExtensions

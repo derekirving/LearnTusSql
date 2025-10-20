@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 
+// ReSharper disable once CheckNamespace
 namespace Unify.Web.Ui.Component.Upload;
 
 public static class WebApplicationBuilderExtensions
