@@ -28,7 +28,7 @@ public static class ServiceCollectionExtensions
 #if DEBUG
         services.Configure<UnifyUploadOptions>(o =>
         {
-            o.BaseUrl = "http://localhost/";
+            o.BaseUrl = "/";
             o.EncryptedAppId = encryptedId;
         });
 

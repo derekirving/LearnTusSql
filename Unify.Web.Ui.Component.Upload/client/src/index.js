@@ -6,9 +6,13 @@ import './style.scss'
 
 const uploadsInit = () => {
 
-    const baseUrl = document.querySelector('meta[name="unify-upload-baseUrl"]')?.getAttribute('content');
+    let baseUrl = document.querySelector('meta[name="unify-upload-baseUrl"]')?.getAttribute('content');
     if (!baseUrl) {
         throw new Error('No \"unify-upload-baseUrl\" meta tag found on html');
+    }
+
+    if (baseUrl === '/') {
+        baseUrl = '';
     }
 
     const APP_ID = document.querySelector('meta[name="unify-upload-id"]')?.getAttribute('content');
