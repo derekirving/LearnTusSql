@@ -8,6 +8,7 @@ using Unify.Web.Ui.Component.Upload.Models;
 using Unify.Web.Ui.Component.Upload.TagHelpers;
 
 #if DEBUG
+using Unify.Encryption;
 using Unify.Web.Ui.Component.Upload.Stores;
 #endif
 
@@ -41,13 +42,17 @@ public static class ServiceCollectionExtensions
         });
 
         services.AddSingleton<ITusConfigurationFactory, TusConfigurationFactoryDev>();
-        services.AddSingleton<TusSqliteStore>(sp =>
+        
+        services.AddSingleton<SharedServerStore>(sp =>
         {
+            //var encryption = sp.GetRequiredService<IUnifyEncryption>();
+            var encryption = encryptionLib;
+            var connectionFactory = sp.GetRequiredService<DbConnectionFactory>();
+            
             var env = sp.GetRequiredService<IWebHostEnvironment>();
             var uploadsDirectory = Path.Combine(env.ContentRootPath, "App_Data", "unify-dev-uploads");
-            var dbPath = Path.Combine(uploadsDirectory, "uploads.db");
-            var connectionFactory = sp.GetRequiredService<DbConnectionFactory>();
-            return new TusSqliteStore(dbPath, uploadsDirectory, connectionFactory);
+            
+            return new SharedServerStore(configuration, encryption, uploadsDirectory, connectionFactory);
         });
         
         //AddHttpClient<UnifyUploadsClientDev>(services, "http://localhost", secret, encryptedId, timeoutMinutes);

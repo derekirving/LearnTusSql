@@ -1,8 +1,8 @@
 using System.Text;
 
-namespace Unify.Uploads.Api;
+namespace Unify.Web.Ui.Component.Upload.Extensions;
 
-public static class Extensions
+public static class StringExtensions
 {
     public static string GetValue(this string input, string propertyName)
     {

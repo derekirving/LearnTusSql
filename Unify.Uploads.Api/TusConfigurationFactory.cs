@@ -1,6 +1,7 @@
 using System.Net;
 using Unify.Web.Ui.Component.Upload;
 using Unify.Web.Ui.Component.Upload.Interfaces;
+using Unify.Web.Ui.Component.Upload.Stores;
 
 namespace Unify.Uploads.Api;
 
@@ -14,7 +15,7 @@ public sealed class TusConfigurationFactory(ILogger<TusConfigurationFactory> log
 
     public DefaultTusConfiguration Create(HttpContext httpContext)
     {
-        var store = httpContext.RequestServices.GetRequiredService<TusSqlServerStore>();
+        var store = httpContext.RequestServices.GetRequiredService<SharedServerStore>();
 
         return new DefaultTusConfiguration
         {

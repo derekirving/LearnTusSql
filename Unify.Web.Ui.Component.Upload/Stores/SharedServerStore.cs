@@ -2,15 +2,16 @@ using System.Data.Common;
 using System.Security.Cryptography;
 using Dapper;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
 using tusdotnet.Interfaces;
 using tusdotnet.Models.Concatenation;
 using Unify.Encryption;
+using Unify.Web.Ui.Component.Upload.Extensions;
 using Unify.Web.Ui.Component.Upload.Models;
-using Unify.Web.Ui.Component.Upload.Stores;
 
-namespace Unify.Uploads.Api;
+namespace Unify.Web.Ui.Component.Upload.Stores;
 
-public class TusSqlServerStore : ITusStore,
+public class SharedServerStore : ITusStore,
     ITusCreationStore,
     ITusTerminationStore,
     ITusExpirationStore,
@@ -21,15 +22,13 @@ public class TusSqlServerStore : ITusStore,
 {
     private readonly IConfiguration _configuration;
     private readonly IUnifyEncryption _encryption;
-    private readonly string _connectionString;
     private readonly string _uploadDirectory;
     private readonly DbConnectionFactory _dbConnectionFactory;
     
-    public TusSqlServerStore(IConfiguration configuration, IUnifyEncryption encryption, string connectionString, string uploadDirectory, DbConnectionFactory dbConnectionFactory)
+    public SharedServerStore(IConfiguration configuration, IUnifyEncryption encryption, string uploadDirectory, DbConnectionFactory dbConnectionFactory)
     {
         _configuration = configuration;
         _encryption = encryption;
-        _connectionString = connectionString;
         _uploadDirectory = uploadDirectory;
         _dbConnectionFactory = dbConnectionFactory;
 
@@ -46,6 +45,7 @@ public class TusSqlServerStore : ITusStore,
         await using var conn = (DbConnection)_dbConnectionFactory.CreateConnection();
         await conn.OpenAsync();
     
+        #if RELEASE
         const string sql = """
 
                                    IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'TusFiles')
@@ -80,6 +80,21 @@ public class TusSqlServerStore : ITusStore,
                            """;
     
         await conn.ExecuteAsync(sql);
+#else
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = @"
+            CREATE TABLE IF NOT EXISTS TusFiles (
+                FileId TEXT PRIMARY KEY,
+                UploadLength INTEGER,
+                UploadOffset INTEGER,
+                Metadata TEXT,
+                CreatedAt TEXT,
+                ExpiresAt TEXT,
+                UploadConcat TEXT,
+                PartialUploads TEXT
+            )";
+        await cmd.ExecuteNonQueryAsync();
+#endif
     }
 
     #region ITusCreationStore
@@ -110,7 +125,7 @@ public class TusSqlServerStore : ITusStore,
             
         }
 
-        await using var conn = new SqlConnection(_connectionString);
+        await using var conn = (DbConnection)_dbConnectionFactory.CreateConnection();
         await conn.OpenAsync(ct);
 
         var sql = @"
@@ -134,7 +149,7 @@ public class TusSqlServerStore : ITusStore,
 
     public async Task<string> GetUploadMetadataAsync(string fileId, CancellationToken ct)
     {
-        await using var conn = new SqlConnection(_connectionString);
+        await using var conn = (DbConnection)_dbConnectionFactory.CreateConnection();
 
         var sql = "SELECT Metadata FROM TusFiles WHERE FileId = @FileId";
         var result = await conn.QuerySingleOrDefaultAsync<string>(sql, new { FileId = fileId });
@@ -148,7 +163,7 @@ public class TusSqlServerStore : ITusStore,
 
     public async Task<bool> FileExistAsync(string fileId, CancellationToken ct)
     {
-        await using var conn = new SqlConnection(_connectionString);
+        await using var conn = (DbConnection)_dbConnectionFactory.CreateConnection();
 
         var sql = "SELECT COUNT(*) FROM TusFiles WHERE FileId = @FileId";
         var count = await conn.ExecuteScalarAsync<int>(sql, new { FileId = fileId });
@@ -158,7 +173,7 @@ public class TusSqlServerStore : ITusStore,
 
     public async Task<long?> GetUploadLengthAsync(string fileId, CancellationToken ct)
     {
-        await using var conn = new SqlConnection(_connectionString);
+        await using var conn = (DbConnection)_dbConnectionFactory.CreateConnection();
 
         var sql = "SELECT UploadLength FROM TusFiles WHERE FileId = @FileId";
         return await conn.QuerySingleOrDefaultAsync<long?>(sql, new { FileId = fileId });
@@ -166,7 +181,7 @@ public class TusSqlServerStore : ITusStore,
 
     public async Task<long> GetUploadOffsetAsync(string fileId, CancellationToken ct)
     {
-        await using var conn = new SqlConnection(_connectionString);
+        await using var conn = (DbConnection)_dbConnectionFactory.CreateConnection();
 
         var sql = "SELECT UploadOffset FROM TusFiles WHERE FileId = @FileId";
         var result = await conn.QuerySingleOrDefaultAsync<long?>(sql, new { FileId = fileId });
@@ -192,7 +207,7 @@ public class TusSqlServerStore : ITusStore,
         }
 
         // Update offset
-        await using var conn = new SqlConnection(_connectionString);
+        await using var conn = (DbConnection)_dbConnectionFactory.CreateConnection();
 
         var sql = "UPDATE TusFiles SET UploadOffset = UploadOffset + @BytesWritten WHERE FileId = @FileId";
         await conn.ExecuteAsync(sql, new { BytesWritten = bytesWritten, FileId = fileId });
@@ -213,7 +228,7 @@ public class TusSqlServerStore : ITusStore,
             File.Delete(filePath);
         }
 
-        await using var conn = new SqlConnection(_connectionString);
+        await using var conn = (DbConnection)_dbConnectionFactory.CreateConnection();
 
         var sql = "DELETE FROM TusFiles WHERE FileId = @FileId";
         await conn.ExecuteAsync(sql, new { FileId = fileId });
@@ -278,7 +293,7 @@ public class TusSqlServerStore : ITusStore,
 
     public async Task SetExpirationAsync(string fileId, DateTimeOffset expires, CancellationToken ct)
     {
-        await using var conn = new SqlConnection(_connectionString);
+        await using var conn = (DbConnection)_dbConnectionFactory.CreateConnection();
 
         var sql = "UPDATE TusFiles SET ExpiresAt = @ExpiresAt WHERE FileId = @FileId";
         await conn.ExecuteAsync(sql, new { ExpiresAt = expires.UtcDateTime, FileId = fileId });
@@ -286,7 +301,7 @@ public class TusSqlServerStore : ITusStore,
 
     public async Task<DateTimeOffset?> GetExpirationAsync(string fileId, CancellationToken ct)
     {
-        await using var conn = new SqlConnection(_connectionString);
+        await using var conn = (DbConnection)_dbConnectionFactory.CreateConnection();
 
         var sql = "SELECT ExpiresAt FROM TusFiles WHERE FileId = @FileId";
         var result = await conn.QuerySingleOrDefaultAsync<DateTime?>(sql, new { FileId = fileId });
@@ -296,7 +311,7 @@ public class TusSqlServerStore : ITusStore,
 
     public async Task<IEnumerable<string>> GetExpiredFilesAsync(CancellationToken ct)
     {
-        await using var conn = new SqlConnection(_connectionString);
+        await using var conn = (DbConnection)_dbConnectionFactory.CreateConnection();
 
         var sql = @"
             SELECT FileId 
@@ -326,7 +341,7 @@ public class TusSqlServerStore : ITusStore,
 
     public async Task<FileConcat?> GetUploadConcatAsync(string fileId, CancellationToken ct)
     {
-        await using var conn = new SqlConnection(_connectionString);
+        await using var conn = (DbConnection)_dbConnectionFactory.CreateConnection();
 
         var sql = "SELECT UploadConcat, PartialUploads FROM TusFiles WHERE FileId = @FileId";
         var result = await conn.QuerySingleOrDefaultAsync<(string UploadConcat, string PartialUploads)>(
@@ -348,7 +363,7 @@ public class TusSqlServerStore : ITusStore,
     {
         var fileId = await CreateFileAsync(uploadLength, metadata, ct);
 
-        await using var conn = new SqlConnection(_connectionString);
+        await using var conn = (DbConnection)_dbConnectionFactory.CreateConnection();
 
         var sql = "UPDATE TusFiles SET UploadConcat = 'partial' WHERE FileId = @FileId";
         await conn.ExecuteAsync(sql, new { FileId = fileId });
@@ -384,7 +399,7 @@ public class TusSqlServerStore : ITusStore,
 
         var totalLength = new FileInfo(filePath).Length;
 
-        await using var conn = new SqlConnection(_connectionString);
+        await using var conn = (DbConnection)_dbConnectionFactory.CreateConnection();
 
         var sql = @"
             INSERT INTO TusFiles (FileId, ZoneId, AppId, UploadLength, UploadOffset, Metadata, CreatedAt, PartialUploads)
@@ -424,7 +439,7 @@ public class TusSqlServerStore : ITusStore,
 
     public async Task SetUploadLengthAsync(string fileId, long uploadLength, CancellationToken ct)
     {
-        await using var conn = new SqlConnection(_connectionString);
+        await using var conn = (DbConnection)_dbConnectionFactory.CreateConnection();
 
         var sql = "UPDATE TusFiles SET UploadLength = @UploadLength WHERE FileId = @FileId";
         await conn.ExecuteAsync(sql, new { UploadLength = uploadLength, FileId = fileId });
@@ -452,7 +467,7 @@ public class TusSqlServerStore : ITusStore,
 
     public async Task CommitFileAsync(string fileId, CancellationToken ct)
     {
-        await using var conn = new SqlConnection(_connectionString);
+        await using var conn = (DbConnection)_dbConnectionFactory.CreateConnection();
 
         var sql = "UPDATE TusFiles SET IsCommitted = 1 WHERE FileId = @FileId";
         await conn.ExecuteAsync(sql, new { FileId = fileId });
@@ -460,7 +475,7 @@ public class TusSqlServerStore : ITusStore,
 
     public async Task<List<UnifyUploadFile>> GetFilesBySessionAsync(string uploadId, CancellationToken ct)
     {
-        await using var conn = new SqlConnection(_connectionString);
+        await using var conn = (DbConnection)_dbConnectionFactory.CreateConnection();
 
         var sql = @"
         SELECT 
@@ -490,7 +505,7 @@ public class TusSqlServerStore : ITusStore,
     {
         var cutoffDate = DateTime.UtcNow.Subtract(olderThan);
 
-        await using var conn = new SqlConnection(_connectionString);
+        await using var conn = (DbConnection)_dbConnectionFactory.CreateConnection();
 
         var sql = @"
             SELECT FileId 
@@ -512,7 +527,7 @@ public class TusSqlServerStore : ITusStore,
     
     public async Task<TusFileInfo?> GetFileInfoAsync(string fileId, CancellationToken ct)
     {
-        await using var conn = new SqlConnection(_connectionString);
+        await using var conn = (DbConnection)_dbConnectionFactory.CreateConnection();
     
         var sql = @"
         SELECT 
@@ -546,11 +561,11 @@ public class TusSqlServerStore : ITusStore,
     // Internal file representation for ITusReadableStore
     private class TusSqlServerFile : ITusFile
     {
-        private readonly TusSqlServerStore _store;
+        private readonly SharedServerStore _store;
         private readonly string _fileId;
         private readonly string _uploadDirectory;
 
-        public TusSqlServerFile(TusSqlServerStore store, string fileId, string uploadDirectory)
+        public TusSqlServerFile(SharedServerStore store, string fileId, string uploadDirectory)
         {
             _store = store;
             _fileId = fileId;

@@ -1,3 +1,5 @@
+using Unify.Web.Ui.Component.Upload.Stores;
+
 namespace Unify.Uploads.Api;
 
 public class TusCleanupService : BackgroundService
@@ -23,7 +25,7 @@ public class TusCleanupService : BackgroundService
             try
             {
                 using var scope = _serviceProvider.CreateScope();
-                var store = scope.ServiceProvider.GetRequiredService<TusSqlServerStore>();
+                var store = scope.ServiceProvider.GetRequiredService<SharedServerStore>();
                 
                 // Remove uncommitted files older than 24 hours
                 var uncommittedRemoved = await store.CleanupUncommittedFilesAsync(

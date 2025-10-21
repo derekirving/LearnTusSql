@@ -1,4 +1,4 @@
-namespace Unify.Uploads.Api;
+namespace Unify.Web.Ui.Component.Upload.Models;
 public class TusFileInfo
 {
     public required string FileId { get; init; }

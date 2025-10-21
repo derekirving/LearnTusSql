@@ -1,3 +1,5 @@
+using Unify.Web.Ui.Component.Upload.Stores;
+
 namespace Unify.Uploads.Api;
 
 public static class EndPoints
@@ -11,7 +13,7 @@ public static class EndPoints
 // Get file info
         endpoints.MapGet("/api/files/{fileId}", async (
                 string fileId,
-                TusSqlServerStore store,
+                SharedServerStore store,
                 CancellationToken ct) =>
             {
                 var exists = await store.FileExistAsync(fileId, ct);
@@ -48,7 +50,7 @@ public static class EndPoints
 // Commit file (mark as permanent)
         endpoints.MapPost("/api/files/{fileId}/commit", async (
                 string fileId,
-                TusSqlServerStore store,
+                SharedServerStore store,
                 CancellationToken ct) =>
             {
                 var exists = await store.FileExistAsync(fileId, ct);
@@ -63,7 +65,7 @@ public static class EndPoints
 // Get files by session
         endpoints.MapGet("/api/sessions/{sessionId}/files", async (
                 string sessionId,
-                TusSqlServerStore store,
+                SharedServerStore store,
                 CancellationToken ct) =>
             {
                 var files = await store.GetFilesBySessionAsync(sessionId, ct);
@@ -74,7 +76,7 @@ public static class EndPoints
 // Download file
         endpoints.MapGet("/api/files/{fileId}/download", async (
                 string fileId,
-                TusSqlServerStore store,
+                SharedServerStore store,
                 CancellationToken ct) =>
             {
                 var exists = await store.FileExistAsync(fileId, ct);
@@ -107,7 +109,7 @@ public static class EndPoints
 // Delete file
         endpoints.MapDelete("/api/files/{fileId}", async (
                 string fileId,
-                TusSqlServerStore store,
+                SharedServerStore store,
                 CancellationToken ct) =>
             {
                 var exists = await store.FileExistAsync(fileId, ct);

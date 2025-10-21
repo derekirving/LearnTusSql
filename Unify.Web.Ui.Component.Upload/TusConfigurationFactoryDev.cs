@@ -12,7 +12,7 @@ public class TusConfigurationFactoryDev(ILogger<TusConfigurationFactoryDev> logg
 {
     public DefaultTusConfiguration Create(HttpContext httpContext)
     {
-        var store = httpContext.RequestServices.GetRequiredService<TusSqliteStore>();
+        var store = httpContext.RequestServices.GetRequiredService<SharedServerStore>();
         return new DefaultTusConfiguration
         {
             Store = store,

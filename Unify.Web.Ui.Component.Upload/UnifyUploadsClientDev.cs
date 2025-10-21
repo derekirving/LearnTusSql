@@ -7,7 +7,7 @@ using Unify.Web.Ui.Component.Upload.Stores;
 
 namespace Unify.Web.Ui.Component.Upload;
 
-public class UnifyUploadsClientDev(TusSqliteStore store) : IUnifyUploadsClient
+public class UnifyUploadsClientDev(SharedServerStore store) : IUnifyUploadsClient
 {
     public string Version { get; }
     public async Task<List<CommitedUploadResult>> CommitFilesAsync(List<UnifyUploadFile> fileIds, CancellationToken ct = default)

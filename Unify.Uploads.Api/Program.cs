@@ -39,19 +39,16 @@ builder.Services.AddSingleton<DbConnectionFactory>(provider =>
 
 builder.Services.AddSingleton<ITusConfigurationFactory, TusConfigurationFactory>();
 
-builder.Services.AddSingleton<TusSqlServerStore>(sp =>
+builder.Services.AddSingleton<SharedServerStore>(sp =>
 {
     var configuration = sp.GetRequiredService<IConfiguration>();
     var encryption = sp.GetRequiredService<IUnifyEncryption>();
     var connectionFactory = sp.GetRequiredService<DbConnectionFactory>();
 
-    var connectionString = configuration.GetConnectionString("TusDatabase");
-    ArgumentException.ThrowIfNullOrEmpty(connectionString);
-
     var uploadsDirectory = configuration["TusSettings:UploadDirectory"];
     ArgumentException.ThrowIfNullOrEmpty(uploadsDirectory);
 
-    return new TusSqlServerStore(configuration, encryption, connectionString, uploadsDirectory, connectionFactory);
+    return new SharedServerStore(configuration, encryption, uploadsDirectory, connectionFactory);
 });
 
 builder.Services.AddHostedService<TusCleanupService>();
