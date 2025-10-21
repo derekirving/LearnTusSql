@@ -1,11 +1,12 @@
+using System.Data.Common;
 using System.Security.Cryptography;
 using Dapper;
 using Microsoft.Data.SqlClient;
 using tusdotnet.Interfaces;
 using tusdotnet.Models.Concatenation;
 using Unify.Encryption;
-using Unify.Web.Ui.Component.Upload;
 using Unify.Web.Ui.Component.Upload.Models;
+using Unify.Web.Ui.Component.Upload.Stores;
 
 namespace Unify.Uploads.Api;
 
@@ -22,13 +23,15 @@ public class TusSqlServerStore : ITusStore,
     private readonly IUnifyEncryption _encryption;
     private readonly string _connectionString;
     private readonly string _uploadDirectory;
+    private readonly DbConnectionFactory _dbConnectionFactory;
     
-    public TusSqlServerStore(IConfiguration configuration, IUnifyEncryption encryption, string connectionString, string uploadDirectory)
+    public TusSqlServerStore(IConfiguration configuration, IUnifyEncryption encryption, string connectionString, string uploadDirectory, DbConnectionFactory dbConnectionFactory)
     {
         _configuration = configuration;
         _encryption = encryption;
         _connectionString = connectionString;
         _uploadDirectory = uploadDirectory;
+        _dbConnectionFactory = dbConnectionFactory;
 
         if (!Directory.Exists(_uploadDirectory))
         {
@@ -40,7 +43,7 @@ public class TusSqlServerStore : ITusStore,
 
     private async Task InitializeDatabase()
     {
-        await using var conn = new SqlConnection(_connectionString);
+        await using var conn = (DbConnection)_dbConnectionFactory.CreateConnection();
         await conn.OpenAsync();
     
         const string sql = """

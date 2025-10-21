@@ -5,6 +5,7 @@ using Unify.Uploads.Api;
 using Unify.Uploads.Api.Authentication;
 using Unify.Web.Ui.Component.Upload;
 using Unify.Web.Ui.Component.Upload.Interfaces;
+using Unify.Web.Ui.Component.Upload.Stores;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddUnifyConfiguration();
@@ -29,12 +30,20 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddSingleton<DbConnectionFactory>(provider =>
+{
+    var env = provider.GetRequiredService<IWebHostEnvironment>();
+    var conf = provider.GetRequiredService<IConfiguration>();
+    return new DbConnectionFactory(env, conf);
+});
+
 builder.Services.AddSingleton<ITusConfigurationFactory, TusConfigurationFactory>();
 
 builder.Services.AddSingleton<TusSqlServerStore>(sp =>
 {
     var configuration = sp.GetRequiredService<IConfiguration>();
     var encryption = sp.GetRequiredService<IUnifyEncryption>();
+    var connectionFactory = sp.GetRequiredService<DbConnectionFactory>();
 
     var connectionString = configuration.GetConnectionString("TusDatabase");
     ArgumentException.ThrowIfNullOrEmpty(connectionString);
@@ -42,7 +51,7 @@ builder.Services.AddSingleton<TusSqlServerStore>(sp =>
     var uploadsDirectory = configuration["TusSettings:UploadDirectory"];
     ArgumentException.ThrowIfNullOrEmpty(uploadsDirectory);
 
-    return new TusSqlServerStore(configuration, encryption, connectionString, uploadsDirectory);
+    return new TusSqlServerStore(configuration, encryption, connectionString, uploadsDirectory, connectionFactory);
 });
 
 builder.Services.AddHostedService<TusCleanupService>();

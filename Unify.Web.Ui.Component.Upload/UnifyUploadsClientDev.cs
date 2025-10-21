@@ -1,11 +1,13 @@
 #if DEBUG
 
+using tusdotnet.Interfaces;
 using Unify.Web.Ui.Component.Upload.Interfaces;
 using Unify.Web.Ui.Component.Upload.Models;
+using Unify.Web.Ui.Component.Upload.Stores;
 
 namespace Unify.Web.Ui.Component.Upload;
 
-public class UnifyUploadsClientDev : IUnifyUploadsClient
+public class UnifyUploadsClientDev(TusSqliteStore store) : IUnifyUploadsClient
 {
     public string Version { get; }
     public async Task<List<CommitedUploadResult>> CommitFilesAsync(List<UnifyUploadFile> fileIds, CancellationToken ct = default)
@@ -20,6 +22,7 @@ public class UnifyUploadsClientDev : IUnifyUploadsClient
 
     public async Task<FileInfoDto?> GetFileInfoAsync(string fileId, CancellationToken ct = default)
     {
+        Task<ITusFile?> f = store.GetFileAsync(fileId, ct);
         throw new NotImplementedException();
     }
 

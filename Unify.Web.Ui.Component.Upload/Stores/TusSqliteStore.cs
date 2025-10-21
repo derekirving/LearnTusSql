@@ -1,4 +1,5 @@
 #if DEBUG
+using System.Data.Common;
 using System.Security.Cryptography;
 using Microsoft.Data.Sqlite;
 using tusdotnet.Interfaces;
@@ -18,11 +19,13 @@ public class TusSqliteStore :
 {
     private readonly string _connectionString;
     private readonly string _uploadDirectory;
+    private readonly DbConnectionFactory _dbConnectionFactory;
 
-    public TusSqliteStore(string databasePath, string uploadDirectory)
+    public TusSqliteStore(string databasePath, string uploadDirectory, DbConnectionFactory dbConnectionFactory)
     {
         _connectionString = $"Data Source={databasePath}";
         _uploadDirectory = uploadDirectory;
+        _dbConnectionFactory = dbConnectionFactory;
 
         if (!Directory.Exists(_uploadDirectory))
         {
@@ -34,7 +37,9 @@ public class TusSqliteStore :
 
     private void InitializeDatabase()
     {
-        using var conn = new SqliteConnection(_connectionString);
+        //using var conn = new SqliteConnection(_connectionString);
+        
+        using var conn = (DbConnection)_dbConnectionFactory.CreateConnection();
         conn.Open();
 
         var cmd = conn.CreateCommand();

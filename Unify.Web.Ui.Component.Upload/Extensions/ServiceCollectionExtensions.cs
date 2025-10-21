@@ -26,6 +26,14 @@ public static class ServiceCollectionExtensions
         var encryptionLib = UnifyEncryptionProvider.Instance;
         var encryptedId = encryptionLib.Encrypt(unifyAppId, secret);
 #if DEBUG
+
+        services.AddSingleton<DbConnectionFactory>(provider =>
+        {
+            var env = provider.GetRequiredService<IWebHostEnvironment>();
+            var conf = provider.GetRequiredService<IConfiguration>();
+            return new DbConnectionFactory(env, conf);
+        });
+        
         services.Configure<UnifyUploadOptions>(o =>
         {
             o.BaseUrl = "/";
@@ -38,7 +46,8 @@ public static class ServiceCollectionExtensions
             var env = sp.GetRequiredService<IWebHostEnvironment>();
             var uploadsDirectory = Path.Combine(env.ContentRootPath, "App_Data", "unify-dev-uploads");
             var dbPath = Path.Combine(uploadsDirectory, "uploads.db");
-            return new TusSqliteStore(dbPath, uploadsDirectory);
+            var connectionFactory = sp.GetRequiredService<DbConnectionFactory>();
+            return new TusSqliteStore(dbPath, uploadsDirectory, connectionFactory);
         });
         
         //AddHttpClient<UnifyUploadsClientDev>(services, "http://localhost", secret, encryptedId, timeoutMinutes);
@@ -54,8 +63,6 @@ public static class ServiceCollectionExtensions
             o.BaseUrl = baseUrl;
             o.EncryptedAppId = encryptedId;
         });
-
-        //AddHttpClient<UnifyUploadsClient>(services, baseUrl, secret, encryptedId, timeoutMinutes);
         
         services.AddHttpClient<UnifyUploadsClient>(client =>
         {
@@ -74,17 +81,4 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ITagHelperComponent, WebUploadsTagHelperComponent>();
         return services;
     }
-
-    // private static void AddHttpClient<T>(IServiceCollection services, string baseUrl, string secret, string encryptedId, double timeoutMinutes) where T : class
-    // {
-    //     services.AddHttpClient<T>(client =>
-    //     {
-    //         ArgumentException.ThrowIfNullOrEmpty(baseUrl);
-    //
-    //         client.DefaultRequestHeaders.Add(AuthConstants.ApiKeyHeaderName, secret);
-    //         client.DefaultRequestHeaders.Add(AuthConstants.UnifyAppIdHeaderName, encryptedId);
-    //         client.BaseAddress = new Uri(baseUrl);
-    //         client.Timeout = TimeSpan.FromMinutes(timeoutMinutes);
-    //     });
-    // }
 }
