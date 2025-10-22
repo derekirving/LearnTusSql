@@ -14,6 +14,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionIt
 		database.sql = database.sql
 		docker-compose.yml = docker-compose.yml
 		Directory.Packages.props = Directory.Packages.props
+		database.sqlite.sql = database.sqlite.sql
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unify.Uploads.Api", "Unify.Uploads.Api\Unify.Uploads.Api.csproj", "{BA418489-DAA8-4510-A1AA-44198E320F56}"
