@@ -13,10 +13,7 @@ builder.AddUnifyConfiguration();
 builder.Services.AddUnifyEncryption();
 
 var allowedOrigins = builder.Configuration.GetSection("TusSettings:AllowedOrigins").Get<string[]>();
-if (allowedOrigins == null)
-{
-    throw new Exception("No allowed origins are specified");
-}
+ArgumentNullException.ThrowIfNull(allowedOrigins);
 
 builder.Services.AddCors(options =>
 {
