@@ -19,7 +19,7 @@ public class UnifyUploadsClient(HttpClient httpClient) : IUnifyUploadsClient
     //     return response.IsSuccessStatusCode;
     // }
 
-    public async Task<List<CommitedUploadResult>> CommitFilesAsync(List<UnifyUploadFile> fileIds, CancellationToken ct = default)
+    public async Task CommitFilesAsync(List<UnifyUploadFile> fileIds, CancellationToken ct = default)
     {
         var tasks = fileIds.Select(async item =>
         {
@@ -31,8 +31,7 @@ public class UnifyUploadsClient(HttpClient httpClient) : IUnifyUploadsClient
             return new CommitedUploadResult(item.FileId, response.IsSuccessStatusCode, response.ReasonPhrase);
         });
 
-        var results = await Task.WhenAll(tasks).ConfigureAwait(false);
-        return results.ToList();
+        await Task.WhenAll(tasks).ConfigureAwait(false);
     }
 
 

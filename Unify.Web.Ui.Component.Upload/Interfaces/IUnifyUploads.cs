@@ -11,7 +11,7 @@ public interface IUnifyUploads
     int GetMaximumFileSize(string zoneId);
     List<string> GetAcceptedFileTypes(string zoneId);
     Task<UnifyUploadSession> GetSessionAsync(string uploadId, CancellationToken cancellationToken = default);
-    Task<List<CommitedUploadResult>> CommitFilesAsync(List<UnifyUploadFile> fileIds, CancellationToken cancellationToken = default);
+    Task CommitFilesAsync(List<UnifyUploadFile> fileIds, CancellationToken cancellationToken = default);
     Task<List<UnifyUploadFile>> GetFilesBySessionAsync(string sessionId, CancellationToken cancellationToken = default);
     Task<bool> DeleteUpload(string fileId, CancellationToken cancellationToken = default);
 }

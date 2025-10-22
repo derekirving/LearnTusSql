@@ -10,9 +10,14 @@ namespace Unify.Web.Ui.Component.Upload;
 public class UnifyUploadsClientDev(SharedServerStore store) : IUnifyUploadsClient
 {
     public string Version => "DEVELOPMENT";
-    public async Task<List<CommitedUploadResult>> CommitFilesAsync(List<UnifyUploadFile> fileIds, CancellationToken ct = default)
+    public async Task CommitFilesAsync(List<UnifyUploadFile> fileIds, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        var tasks = fileIds.Select(async item =>
+        {
+            await store.CommitFileAsync(item.FileId, ct);
+        });
+        
+        await Task.WhenAll(tasks).ConfigureAwait(false);
     }
 
     public async Task<List<UnifyUploadFile>> GetFilesBySessionAsync(string sessionId, CancellationToken ct = default)

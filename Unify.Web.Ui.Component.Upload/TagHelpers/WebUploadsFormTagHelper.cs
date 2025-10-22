@@ -15,8 +15,6 @@ public class WebUploadsFormTagHelper : TagHelper
     [HtmlAttributeName("submit-after-unify-uploads")] public bool AutoSubmit { get; set; }
     public override void Process(TagHelperContext context, TagHelperOutput output)
     {
-        const string name = nameof(IUnifyUploadSession.UploadSession.Id);
-        
         var model = ViewContext?.ViewData.Model;
         ArgumentNullException.ThrowIfNull(model);
         
@@ -42,6 +40,7 @@ public class WebUploadsFormTagHelper : TagHelper
             output.Attributes.SetAttribute("class", newClasses);
         }
         
+        const string name = $"{nameof(IUnifyUploadSession.UploadSession)}.{nameof(UnifyUploadSession.Id)}";
         var hiddenInput = $"<input class='unify-upload-id' type=\"hidden\" name=\"{name}\" value=\"{value}\" />";
         output.PostContent.AppendHtml(hiddenInput);
     }

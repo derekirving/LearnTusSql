@@ -13,7 +13,7 @@ namespace Unify.Web.Ui.Component.Upload.TagHelpers;
 
 [HtmlTargetElement("unify-web-upload")]
 public class WebUploadsTagHelper(
-    IOptions<UnifyUploadOptions> uploadOptions, 
+    //IOptions<UnifyUploadOptions> uploadOptions, 
     IUnifyUploads unifyUploads,
     LinkGenerator linkGenerator,
     IUnifyUploadsClient client) : TagHelper
@@ -173,16 +173,14 @@ public class WebUploadsTagHelper(
             var sb = new StringBuilder();
             foreach (var item in zonedUploads)
             {
-                //sb.AppendLine($"<input type=\"hidden\" name=\"fileId\" value='{item.FileId}' />");
-                
-                for (int i = 0; i < zonedUploads.Count; i++)
+                for (var i = 0; i < zonedUploads.Count; i++)
                 {
                     var file = zonedUploads[i];
-                    sb.AppendLine($@"<input type=""hidden"" name=""UploadSession.Files[{i}].FileId"" value=""{file.FileId}"" />");
-                    sb.AppendLine($@"<input type=""hidden"" name=""UploadSession.Files[{i}].FileName"" value=""{file.FileName}"" />");
-                    sb.AppendLine($@"<input type=""hidden"" name=""UploadSession.Files[{i}].Zone"" value=""{file.Zone}"" />");
-                    sb.AppendLine($@"<input type=""hidden"" name=""UploadSession.Files[{i}].Size"" value=""{file.Size}"" />");
-                    sb.AppendLine($@"<input type=""hidden"" name=""UploadSession.Files[{i}].Uri"" value=""{file.Uri}"" />");
+                    sb.AppendLine($"""<input type="hidden" name="UploadSession.Files[{i}].FileId" value="{file.FileId}" />""");
+                    sb.AppendLine($"""<input type="hidden" name="UploadSession.Files[{i}].FileName" value="{file.FileName}" />""");
+                    sb.AppendLine($"""<input type="hidden" name="UploadSession.Files[{i}].Zone" value="{file.Zone}" />""");
+                    sb.AppendLine($"""<input type="hidden" name="UploadSession.Files[{i}].Size" value="{file.Size}" />""");
+                    sb.AppendLine($"""<input type="hidden" name="UploadSession.Files[{i}].Uri" value="{file.Uri}" />""");
                 }
             }
             

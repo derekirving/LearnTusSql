@@ -49,9 +49,9 @@ public sealed class UnifyUploads(IConfiguration configuration, IUnifyUploadsClie
         };
     }
 
-    public async Task<List<CommitedUploadResult>> CommitFilesAsync(List<UnifyUploadFile> fileIds, CancellationToken cancellationToken = default)
+    public async Task CommitFilesAsync(List<UnifyUploadFile> fileIds, CancellationToken cancellationToken = default)
     {
-        return await client.CommitFilesAsync(fileIds, cancellationToken);
+        await client.CommitFilesAsync(fileIds, cancellationToken);
     }
 
     public async Task<List<UnifyUploadFile>> GetFilesBySessionAsync(string sessionId, CancellationToken cancellationToken = default)
