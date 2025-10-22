@@ -1,11 +1,9 @@
-#if RELEASE
-
 using Microsoft.Extensions.Configuration;
 using Unify.Web.Ui.Component.Upload.Interfaces;
 using Unify.Web.Ui.Component.Upload.Models;
 
 namespace Unify.Web.Ui.Component.Upload;
-public sealed class UnifyUploads(IConfiguration configuration, UnifyUploadsClient client) : IUnifyUploads
+public sealed class UnifyUploads(IConfiguration configuration, IUnifyUploadsClient client) : IUnifyUploads
 {
     private const string SecName = "Unify:Uploads:Zones:";
 
@@ -66,4 +64,3 @@ public sealed class UnifyUploads(IConfiguration configuration, UnifyUploadsClien
         return  await client.DeleteFileAsync(fileId, cancellationToken);
     }
 }
-#endif

@@ -1,4 +1,6 @@
-namespace Unify.Uploads.Api;
+using Microsoft.Extensions.Logging;
+
+namespace Unify.Web.Ui.Component.Upload;
 
 internal static partial class Log
 {

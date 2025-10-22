@@ -1,17 +1,16 @@
 using System.Net;
-using Unify.Web.Ui.Component.Upload;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Unify.Web.Ui.Component.Upload.Interfaces;
 using Unify.Web.Ui.Component.Upload.Stores;
-
-namespace Unify.Uploads.Api;
-
+namespace Unify.Web.Ui.Component.Upload;
 using Microsoft.Extensions.Logging;
 using tusdotnet.Models;
 using tusdotnet.Models.Configuration;
 
-public sealed class TusConfigurationFactory(ILogger<TusConfigurationFactory> logger) : ITusConfigurationFactory
+public sealed class TusConfigurationFactory : ITusConfigurationFactory
 {
-    private readonly ILogger<TusConfigurationFactory> _logger = logger;
+    //private readonly ILogger<TusConfigurationFactory> _logger = logger;
 
     public DefaultTusConfiguration Create(HttpContext httpContext)
     {
@@ -62,7 +61,7 @@ public sealed class TusConfigurationFactory(ILogger<TusConfigurationFactory> log
                     var endPoint = $"{ctx.HttpContext.Request.PathBase}/unify/uploads/{ctx.FileId}";
                     ctx.HttpContext.Response.Headers.Append("Content-Location", endPoint);
 
-                    var logger = ctx.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                    var logger = ctx.HttpContext.RequestServices.GetRequiredService<ILogger<TusConfigurationFactory>>();
                     Log.FileUploadCompleted(logger, file.Id);
                 },
                 OnBeforeCreateAsync = async ctx =>

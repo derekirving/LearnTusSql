@@ -30,10 +30,10 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddSingleton<DbConnectionFactory>(provider =>
+builder.Services.AddSingleton<DbConnectionFactory>(sp =>
 {
-    var env = provider.GetRequiredService<IWebHostEnvironment>();
-    var conf = provider.GetRequiredService<IConfiguration>();
+    var env = sp.GetRequiredService<IWebHostEnvironment>();
+    var conf = sp.GetRequiredService<IConfiguration>();
     return new DbConnectionFactory(env, conf);
 });
 
