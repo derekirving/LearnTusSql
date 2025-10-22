@@ -64,6 +64,8 @@ public static class ServiceCollectionExtensions
         });
         
         services.AddTransient<IUnifyUploadsClient, UnifyUploadsClientDev>();
+        
+        services.AddHostedService<TusCleanupService>();
 #else
         services.AddHttpClient<UnifyUploadsClient>(client =>
         {

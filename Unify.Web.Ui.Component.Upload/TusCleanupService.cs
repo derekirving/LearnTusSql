@@ -1,6 +1,9 @@
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Unify.Web.Ui.Component.Upload.Stores;
 
-namespace Unify.Uploads.Api;
+namespace Unify.Web.Ui.Component.Upload;
 
 public class TusCleanupService : BackgroundService
 {
