@@ -7,7 +7,7 @@ namespace Unify.Web.Ui.Component.Upload;
 
 public class UnifyUploadsClient(HttpClient httpClient) : IUnifyUploadsClient
 {
-    public string Version => "0.1.0";
+    public string Version => "PRODUCTION";
 
     // public async Task<bool> AssociateFileAsync(string fileId, string sessionId, string appId, CancellationToken ct = default)
     // {

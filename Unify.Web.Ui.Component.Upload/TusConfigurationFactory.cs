@@ -10,8 +10,6 @@ using tusdotnet.Models.Configuration;
 
 public sealed class TusConfigurationFactory : ITusConfigurationFactory
 {
-    //private readonly ILogger<TusConfigurationFactory> _logger = logger;
-
     public DefaultTusConfiguration Create(HttpContext httpContext)
     {
         var store = httpContext.RequestServices.GetRequiredService<SharedServerStore>();

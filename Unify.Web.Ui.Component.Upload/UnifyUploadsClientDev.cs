@@ -9,7 +9,7 @@ namespace Unify.Web.Ui.Component.Upload;
 
 public class UnifyUploadsClientDev(SharedServerStore store) : IUnifyUploadsClient
 {
-    public string Version { get; }
+    public string Version => "DEVELOPMENT";
     public async Task<List<CommitedUploadResult>> CommitFilesAsync(List<UnifyUploadFile> fileIds, CancellationToken ct = default)
     {
         throw new NotImplementedException();
