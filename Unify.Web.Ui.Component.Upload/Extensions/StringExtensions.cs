@@ -4,7 +4,7 @@ namespace Unify.Web.Ui.Component.Upload.Extensions;
 
 public static class StringExtensions
 {
-    public static string GetValue(this string input, string propertyName)
+    public static string GetMetaValue(this string input, string propertyName)
     {
         ArgumentNullException.ThrowIfNull(input);
         ArgumentNullException.ThrowIfNull(propertyName);

@@ -115,18 +115,18 @@ CREATE INDEX IF NOT EXISTS IX_TusFiles_Uncommitted ON TusFiles(CreatedAt);
         var secret = _configuration["Unify:Secret"];
         ArgumentException.ThrowIfNullOrEmpty(secret);
         
-        var encryptedAppId = metadata.GetValue("appId");
+        var encryptedAppId = metadata.GetMetaValue("appId");
         ArgumentException.ThrowIfNullOrEmpty(encryptedAppId);
         
         var appId = _encryption.Decrypt(encryptedAppId, secret);
 
-        var zoneId = metadata.GetValue("zoneId");
+        var zoneId = metadata.GetMetaValue("zoneId");
         ArgumentException.ThrowIfNullOrEmpty(zoneId);
         
-        var uploadId = metadata.GetValue("uploadId");
+        var uploadId = metadata.GetMetaValue("uploadId");
         ArgumentException.ThrowIfNullOrEmpty(uploadId);
         
-        var fileName = metadata.GetValue("name");
+        var fileName = metadata.GetMetaValue("name");
         
         var fileId = Guid.NewGuid().ToString("N");
         var filePath = GetFilePath(fileId);
@@ -384,10 +384,10 @@ CREATE INDEX IF NOT EXISTS IX_TusFiles_Uncommitted ON TusFiles(CreatedAt);
 
     public async Task<string> CreateFinalFileAsync(string[] partialFiles, string metadata, CancellationToken ct)
     {
-        var appId = metadata.GetValue("appId");
+        var appId = metadata.GetMetaValue("appId");
         ArgumentException.ThrowIfNullOrEmpty(appId);
         
-        var zoneId = metadata.GetValue("zoneId");
+        var zoneId = metadata.GetMetaValue("zoneId");
         ArgumentException.ThrowIfNullOrEmpty(zoneId);
         
         var fileId = Guid.NewGuid().ToString("N");
@@ -557,7 +557,7 @@ CREATE INDEX IF NOT EXISTS IX_TusFiles_Uncommitted ON TusFiles(CreatedAt);
         var fi = await conn.QuerySingleOrDefaultAsync<TusFileInfo>(sql, new { FileId = fileId });
         if (fi == null) return null;
         
-        fi.FileName = fi.Metadata.GetValue("name");
+        fi.FileName = fi.Metadata.GetMetaValue("name");
         
         return fi;
     }
