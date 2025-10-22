@@ -30,8 +30,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddSingleton<DbConnectionFactory>(sp =>
 {
     var env = sp.GetRequiredService<IWebHostEnvironment>();
-    var conf = sp.GetRequiredService<IConfiguration>();
-    return new DbConnectionFactory(env, conf);
+    return new DbConnectionFactory(env);
 });
 
 builder.Services.AddSingleton<ITusConfigurationFactory, TusConfigurationFactory>();

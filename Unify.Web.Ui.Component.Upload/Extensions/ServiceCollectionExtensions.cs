@@ -48,8 +48,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<DbConnectionFactory>(provider =>
         {
             var env = provider.GetRequiredService<IWebHostEnvironment>();
-            var conf = provider.GetRequiredService<IConfiguration>();
-            return new DbConnectionFactory(env, conf);
+            return new DbConnectionFactory(env);
         });
 
         services.AddSingleton<ITusConfigurationFactory, TusConfigurationFactory>();
