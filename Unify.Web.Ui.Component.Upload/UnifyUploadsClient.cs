@@ -33,8 +33,7 @@ public class UnifyUploadsClient(HttpClient httpClient) : IUnifyUploadsClient
 
         await Task.WhenAll(tasks).ConfigureAwait(false);
     }
-
-
+    
     public async Task<List<UnifyUploadFile>> GetFilesBySessionAsync(string sessionId, CancellationToken ct = default)
     {
         var response = await httpClient.GetFromJsonAsync<List<UnifyUploadFile>>(
@@ -44,11 +43,13 @@ public class UnifyUploadsClient(HttpClient httpClient) : IUnifyUploadsClient
         return response ?? [];
     }
 
-    public async Task<FileInfoDto?> GetFileInfoAsync(string fileId, CancellationToken ct = default)
+    public async Task<TusFileInfo?> GetFileInfoAsync(string fileId, CancellationToken ct = default)
     {
-        return await httpClient.GetFromJsonAsync<FileInfoDto>(
+        var dto = await httpClient.GetFromJsonAsync<TusFileInfo>(
             $"/api/files/{fileId}",
             ct);
+
+        return dto;
     }
 
     public async Task<bool> DeleteFileAsync(string fileId, CancellationToken ct = default)

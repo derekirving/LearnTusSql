@@ -22,13 +22,12 @@ public class UnifyUploadsClientDev(SharedServerStore store) : IUnifyUploadsClien
 
     public async Task<List<UnifyUploadFile>> GetFilesBySessionAsync(string sessionId, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        return  await store.GetFilesBySessionAsync(sessionId, ct);
     }
 
-    public async Task<FileInfoDto?> GetFileInfoAsync(string fileId, CancellationToken ct = default)
+    public async Task<TusFileInfo?> GetFileInfoAsync(string fileId, CancellationToken ct = default)
     {
-        Task<ITusFile?> f = store.GetFileAsync(fileId, ct);
-        throw new NotImplementedException();
+        return await store.GetFileInfoAsync(fileId, ct);
     }
 
     public async Task<bool> DeleteFileAsync(string fileId, CancellationToken ct = default)

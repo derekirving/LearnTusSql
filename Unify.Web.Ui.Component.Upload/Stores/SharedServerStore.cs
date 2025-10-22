@@ -503,7 +503,7 @@ CREATE INDEX IF NOT EXISTS IX_TusFiles_Uncommitted ON TusFiles(CreatedAt);
                 FileId = row.FileId,
                 FileName = row.FileName,
                 Zone = row.Zone,
-                Size = row.Size,
+                Size = (int)row.Size,
                 Uri = new Uri($"https://domain.com/{row.FileId}")
             })
             .ToList();
