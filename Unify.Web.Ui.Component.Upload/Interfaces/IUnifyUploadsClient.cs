@@ -9,5 +9,5 @@ public interface IUnifyUploadsClient
     Task<List<UnifyUploadFile>> GetFilesBySessionAsync(string sessionId, CancellationToken ct = default);
     Task<TusFileInfo?> GetFileInfoAsync(string fileId, CancellationToken ct = default);
     Task<bool> DeleteFileAsync(string fileId, CancellationToken ct = default);
-    string GetDownloadUrl(string fileId);
+    Task<(Stream FileStream, string ContentType, string FileName)> DownloadFileAsync(string fileId, CancellationToken ct = default);
 }

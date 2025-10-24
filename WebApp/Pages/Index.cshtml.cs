@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Unify.Web.Ui.Component.Upload.Interfaces;
 using Unify.Web.Ui.Component.Upload.Models;
 
@@ -12,9 +13,13 @@ public class Index(AppDbContext dbContext, IUnifyUploads unifyUploads) : PageMod
 {
     [BindProperty] public required UnifyUploadSession UploadSession { get; set; }
     [BindProperty] public required Post Post { get; set; }
+    
+    internal List<Post>? Posts;
 
     public async Task<IActionResult> OnGet(int? postId)
     {
+        Posts = await dbContext.Posts.ToListAsync();
+        
         if (!postId.HasValue)
         {
             Post = new Post();
@@ -22,7 +27,7 @@ public class Index(AppDbContext dbContext, IUnifyUploads unifyUploads) : PageMod
             return Page();
         }
 
-        var post = await dbContext.Posts.FindAsync(postId.Value);
+        var post = Posts.Find(x => x.PostId == postId.Value);
         if (post == null) return NotFound();
 
         Post = post;
@@ -44,6 +49,12 @@ public class Index(AppDbContext dbContext, IUnifyUploads unifyUploads) : PageMod
         await dbContext.SaveChangesAsync();
         return RedirectToPage("/Index", new { postId = Post.PostId });
     }
+    
+    // public async Task<IActionResult> OnGetDownloadAsync(string fileId)
+    // {
+    //     var (stream, contentType, fileName) = await unifyUploads.DownloadFileAsync(fileId, HttpContext.RequestAborted);
+    //     return File(stream, contentType, fileName);
+    // }
 
     public async Task<IActionResult> OnGetDeleteAsync(string fileId)
     {

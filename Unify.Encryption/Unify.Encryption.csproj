@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
-        <Version>8.0.2</Version>
+        <Version>8.0.3</Version>
         <Description>Adds Encryption capabilities to Unify applications</Description>
     </PropertyGroup>
 

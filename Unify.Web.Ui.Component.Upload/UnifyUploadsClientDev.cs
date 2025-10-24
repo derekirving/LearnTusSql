@@ -1,6 +1,5 @@
 #if DEBUG
 
-using tusdotnet.Interfaces;
 using Unify.Web.Ui.Component.Upload.Interfaces;
 using Unify.Web.Ui.Component.Upload.Models;
 using Unify.Web.Ui.Component.Upload.Stores;
@@ -35,7 +34,7 @@ public class UnifyUploadsClientDev(SharedServerStore store) : IUnifyUploadsClien
         throw new NotImplementedException();
     }
 
-    public string GetDownloadUrl(string fileId)
+    public async Task<(Stream FileStream, string ContentType, string FileName)> DownloadFileAsync(string fileId, CancellationToken ct = default)
     {
         throw new NotImplementedException();
     }

@@ -58,6 +58,11 @@ public sealed class UnifyUploads(IConfiguration configuration, IUnifyUploadsClie
     {
         return await client.GetFilesBySessionAsync(sessionId, cancellationToken);
     }
+    
+    public async Task<(Stream FileStream, string ContentType, string FileName)>  DownloadFileAsync(string fileId, CancellationToken ct = default)
+    {
+        return await client.DownloadFileAsync(fileId, ct);
+    }
 
     public async Task<bool> DeleteUpload(string fileId, CancellationToken cancellationToken = default)
     {

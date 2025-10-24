@@ -1,5 +1,7 @@
 @page "{postId:int?}"
+@inject IUnifyUploads Uploads
 
+@using Unify.Web.Ui.Component.Upload.Interfaces
 @model WebApp.Pages.Index
 @{
     Layout = null;
@@ -13,20 +15,40 @@
     <link rel="stylesheet" href="~/cmpnt/upload.css" />
 </head>
 <body>
-<div>
-    <form method="post" class="mb-2" submit-after-unify-uploads="true">
-        <div class="mb-3">
-            <label asp-for="Post.PostTitle"></label>
-            <input class="form-control" asp-for="Post.PostTitle"/>
-            <span class="text-danger" asp-validation-for="Post.PostTitle"></span>
-        </div>
+
+<form method="post" class="mb-2" submit-after-unify-uploads="true">
+    <div class="mb-3">
+        <label asp-for="Post.PostTitle"></label>
+        <input class="form-control" asp-for="Post.PostTitle"/>
+        <span class="text-danger" asp-validation-for="Post.PostTitle"></span>
+    </div>
         
-        <p data-for="MyUploadZone">Upload assignment files</p>
-        <unify-web-upload zone="MyUploadZone" asp-page="/Index" asp-page-delete-handler="Delete"/>
+    <p data-for="MyUploadZone">Upload assignment files</p>
+    <unify-web-upload zone="MyUploadZone" asp-page="/Index" asp-page-delete-handler="Delete" link-files="false"/>
         
-        <input class="btn btn-primary" type="submit"/>
-    </form>
-</div>
+    <input class="btn btn-primary" type="submit"/>
+</form>
+
+<hr/>
+
+<p>https://github.com/fiduswriter/simple-datatables</p>
+
+@if (Model.Posts != null)
+{
+    @foreach (var item in Model.Posts)
+    {
+        var uploads = await Uploads.GetFilesBySessionAsync(item.UploadId);
+        <p><a asp-page="/index" asp-route-postId="@item.PostId">@item.PostTitle</a>
+            <ul>
+                @foreach (var file in uploads)
+                {
+                    <li><a asp-route="UnifyDownload" asp-route-fileId="@file.FileId">@file.FileName</a></li>
+                }
+            </ul>
+            </p>
+    }
+}
+
 
 <script src="~/cmpnt/upload.js"></script>
 

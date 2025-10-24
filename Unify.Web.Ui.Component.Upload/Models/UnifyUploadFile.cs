@@ -3,6 +3,7 @@ namespace Unify.Web.Ui.Component.Upload.Models;
 public class UnifyUploadFile
 {
     public required string FileId { get; set; }
+    //public required string FileId { get; set; }
     public required string FileName { get; set; }
     public required string Zone { get; set; }
     public int Size { get; set; }

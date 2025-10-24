@@ -13,5 +13,6 @@ public interface IUnifyUploads
     Task<UnifyUploadSession> GetSessionAsync(string uploadId, CancellationToken cancellationToken = default);
     Task CommitFilesAsync(List<UnifyUploadFile> fileIds, CancellationToken cancellationToken = default);
     Task<List<UnifyUploadFile>> GetFilesBySessionAsync(string sessionId, CancellationToken cancellationToken = default);
+    Task<(Stream FileStream, string ContentType, string FileName)> DownloadFileAsync(string fileId, CancellationToken ct = default);
     Task<bool> DeleteUpload(string fileId, CancellationToken cancellationToken = default);
 }

@@ -26,6 +26,8 @@ public class WebUploadsTagHelper(
     [HtmlAttributeName("asp-page-delete-handler")]
     public string? DeleteHandler { get; set; }
 
+    [HtmlAttributeName("link-files")] public bool LinkFiles { get; set; } = true;
+
     [HtmlAttributeName(DictionaryAttributePrefix = "asp-route-")]
     public Dictionary<string, string?> RouteValues { get; set; } = new();
     
@@ -145,16 +147,32 @@ public class WebUploadsTagHelper(
                         }
                     }
 
+                    var fileEntries = $"""
+                                       <a class="text-decoration-none">
+                                           <svg class="mb-1" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                             <path d="M4 2H14L20 8V20C20 21.1 19.1 22 18 22H6C4.9 22 4 21.1 4 20V2Z" stroke="gray" stroke-width="2" stroke-linejoin="round"/>
+                                             <path d="M14 2V8H20" stroke="gray" stroke-width="2" stroke-linejoin="round"/>
+                                           </svg>
+                                           {meta.FileName}
+                                       </a> 
+                                       """;
+                    if (LinkFiles)
+                    {
+                        fileEntries = $"""
+                                       <a title="Open this file" class="text-decoration-none" href="{pathBase}/unify/download/{file.FileId}">
+                                           <svg class="mb-1" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                             <path d="M4 2H14L20 8V20C20 21.1 19.1 22 18 22H6C4.9 22 4 21.1 4 20V2Z" stroke="gray" stroke-width="2" stroke-linejoin="round"/>
+                                             <path d="M14 2V8H20" stroke="gray" stroke-width="2" stroke-linejoin="round"/>
+                                           </svg>
+                                           {meta.FileName}
+                                       </a> 
+                                       """;
+                    }
+
                     fileListHtml.AppendLine($"""
                                                                  <li>
                                                                      <span>
-                                                                         <a title="Open this file" class="text-decoration-none" href="{pathBase}/unify/uploads/{file.FileId}">
-                                                                             <svg class="mb-1" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                               <path d="M4 2H14L20 8V20C20 21.1 19.1 22 18 22H6C4.9 22 4 21.1 4 20V2Z" stroke="gray" stroke-width="2" stroke-linejoin="round"/>
-                                                                               <path d="M14 2V8H20" stroke="gray" stroke-width="2" stroke-linejoin="round"/>
-                                                                             </svg>
-                                                                             {meta.FileName}
-                                                                         </a> 
+                                                                     {fileEntries}
                                                                          <small class="text-muted">({meta.UploadLength / 1024.0:0.0} KB)</small>
                                                                      </span>
                                                                      {deleteListHtml}

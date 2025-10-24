@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Unify.Encryption;
 using Unify.Web.Ui.Component.Upload.Interfaces;
 using Unify.Web.Ui.Component.Upload.Models;
 using Unify.Web.Ui.Component.Upload.TagHelpers;
@@ -22,12 +23,9 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddUnifyUploads(this IServiceCollection services, IConfiguration configuration,
         string unifyAppId, double timeoutMinutes = 5)
     {
-        var secret = configuration["Unify:Secret"];
-        ArgumentException.ThrowIfNullOrEmpty(secret);
-
-        UnifyEncryptionProvider.Initialise(configuration);
+        UnifyEncryptionProvider.Initialise(configuration, true);
         var encryptionLib = UnifyEncryptionProvider.Instance;
-        var encryptedId = encryptionLib.Encrypt(unifyAppId, secret);
+        var encryptedId = encryptionLib.Encrypt(unifyAppId);
 
         services.AddSingleton<IUnifyUploads, UnifyUploads>();
         services.AddTransient<ITagHelperComponent, WebUploadsTagHelperComponent>();
@@ -68,6 +66,9 @@ public static class ServiceCollectionExtensions
 #else
         services.AddHttpClient<UnifyUploadsClient>(client =>
         {
+            var secret = configuration["Unify:Secret"];
+            ArgumentException.ThrowIfNullOrEmpty(secret);
+            
             client.DefaultRequestHeaders.Add(AuthConstants.ApiKeyHeaderName, secret);
             client.DefaultRequestHeaders.Add(AuthConstants.UnifyAppIdHeaderName, encryptedId);
             client.BaseAddress = new Uri(baseUrl);

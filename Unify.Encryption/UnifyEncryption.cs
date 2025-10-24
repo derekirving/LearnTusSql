@@ -14,27 +14,34 @@ namespace Unify.Encryption
     {
         private readonly IConfiguration _configuration;
         private readonly byte[] _masterKeyBytes;
-        private readonly string _masterKey;
         private readonly Hashids _hashIds;
-        private readonly CryptoRandom _cryptoRandom = new CryptoRandom();
+        private readonly CryptoRandom _cryptoRandom = new();
 
-        public UnifyEncryption(IConfiguration configuration)
+        public UnifyEncryption(IConfiguration configuration, bool useSharedSecret = false)
         {
             _configuration = configuration;
-            var masterKey = configuration["Application:MasterKey"];
+            string masterKey;
 
-            if(string.IsNullOrEmpty(masterKey))
+            if (useSharedSecret)
             {
-                // Backwards compat
-                masterKey = configuration["Unify:Application:MasterKey"];
+                masterKey = configuration["Unify:secret"];
+            }
+            else
+            {
+                masterKey = configuration["Application:MasterKey"];
+                
+                if(string.IsNullOrEmpty(masterKey))
+                {
+                    // Backwards compat
+                    masterKey = configuration["Unify:Application:MasterKey"];
+                }
             }
 
-            if (string.IsNullOrEmpty(masterKey)) throw new ArgumentException("Neither Application:MasterKey or Unify:Application:MasterKey found in config");
-
-            _masterKey = masterKey;
+            if (string.IsNullOrEmpty(masterKey)) throw new ArgumentException("None of the expected encryption properties were found in config");
+            
             _masterKeyBytes = Utils.SafeUTF8.GetBytes(masterKey);
 
-            _hashIds = new Hashids(_masterKey);
+            _hashIds = new Hashids(masterKey, minHashLength: 4);
         }
 
         public string Encrypt(string plainText, string salt = "")

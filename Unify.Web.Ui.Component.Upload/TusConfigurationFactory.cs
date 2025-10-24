@@ -3,10 +3,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Unify.Web.Ui.Component.Upload.Interfaces;
 using Unify.Web.Ui.Component.Upload.Stores;
-namespace Unify.Web.Ui.Component.Upload;
 using Microsoft.Extensions.Logging;
 using tusdotnet.Models;
 using tusdotnet.Models.Configuration;
+
+namespace Unify.Web.Ui.Component.Upload;
 
 public sealed class TusConfigurationFactory : ITusConfigurationFactory
 {

@@ -1,7 +1,7 @@
 namespace Unify.Web.Ui.Component.Upload.Models;
 public class TusFileInfo
 {
-    public required string FileId { get; init; }
+    public required string FileId { get; set; }
     public string FileName { get; set; } = string.Empty;
     public long? UploadLength { get; init; }
     public long UploadOffset { get; init; } 

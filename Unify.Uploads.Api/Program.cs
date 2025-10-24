@@ -10,10 +10,9 @@ using Unify.Web.Ui.Component.Upload.Stores;
 var builder = WebApplication.CreateBuilder(args);
 builder.AddUnifyConfiguration();
 
-builder.Services.AddUnifyEncryption();
-
 var allowedOrigins = builder.Configuration.GetSection("TusSettings:AllowedOrigins").Get<string[]>();
 ArgumentNullException.ThrowIfNull(allowedOrigins);
+
 
 builder.Services.AddCors(options =>
 {
@@ -26,6 +25,8 @@ builder.Services.AddCors(options =>
             .WithExposedHeaders("Upload-Offset", "Upload-Length", "Tus-Resumable", "Location", "Content-Location");
     });
 });
+
+builder.Services.AddSingleton<IUnifyEncryption>(_ => new UnifyEncryption(builder.Configuration, true));
 
 builder.Services.AddSingleton<DbConnectionFactory>(sp =>
 {
@@ -45,6 +46,7 @@ builder.Services.AddSingleton<SharedServerStore>(sp =>
 {
     var configuration = sp.GetRequiredService<IConfiguration>();
     var encryption = sp.GetRequiredService<IUnifyEncryption>();
+    
     var connectionFactory = sp.GetRequiredService<DbConnectionFactory>();
 
     var uploadsDirectory = configuration["TusSettings:UploadDirectory"];

@@ -61,9 +61,16 @@ public class UnifyUploadsClient(HttpClient httpClient) : IUnifyUploadsClient
         return response.IsSuccessStatusCode;
     }
 
-    public string GetDownloadUrl(string fileId)
+    public async Task<(Stream FileStream, string ContentType, string FileName)> DownloadFileAsync(string fileId, CancellationToken ct = default)
     {
-        return $"{httpClient.BaseAddress}api/files/{fileId}/download";
+        var response = await httpClient.GetAsync($"/api/files/{fileId}/download", ct);
+        response.EnsureSuccessStatusCode();
+        var stream = await response.Content.ReadAsStreamAsync(ct);
+        var contentType = response.Content.Headers.ContentType?.ToString() ?? "application/octet-stream";
+        var fileName = response.Content.Headers.ContentDisposition?.FileName ?? "download";
+        // ContentDispositionHeaderValue may include surrounding double quotes, as per RFC standards
+        fileName = fileName.Trim('"');
+        return (stream, contentType, fileName);
     }
 }
 #endif

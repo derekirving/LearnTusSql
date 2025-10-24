@@ -222,3 +222,14 @@ public class Index : PageModel
 
 **NOTE** Your IDE *may* display a warning similar to `Route parameter constraint 'hashid' is not resolved`. This can be ignored.
 
+### Using a static instance for shared keys
+
+In applications (or more likely other libraries) that wish to use the shared `Unify:Secret` key to encrypt/decrypt data, use the static `UnifyEncryptionProvider` passing in an `IConfiguration` object and setting `useSharedSecret: true`: 
+
+```csharp
+UnifyEncryptionProvider.Initialise(configuration, true);
+
+var encryptionLib = UnifyEncryptionProvider.Instance;
+var encryptedText = encryptionLib.Encrypt("This is plain text");
+var decryptedText = encryptionLib.Decrypt(encryptedText);
+```

@@ -1,9 +1,11 @@
-using Microsoft.AspNetCore.Builder;
 #if DEBUG
 using Microsoft.Extensions.DependencyInjection;
 using tusdotnet;
-using Unify.Web.Ui.Component.Upload.Interfaces;
 #endif
+
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Unify.Web.Ui.Component.Upload.Interfaces;
 
 // ReSharper disable once CheckNamespace
 namespace Unify.Web.Ui.Component.Upload;
@@ -14,8 +16,14 @@ public static class WebApplicationExtensions
     {
         #if DEBUG
         app.UseTus(ctx => ctx.RequestServices.GetRequiredService<ITusConfigurationFactory>().Create(ctx));
-        app.MapGet("/upload", () => "Upload endpoint");
+        app.MapGet("/unify/upload", () => "Upload endpoint");
         #endif
+        
+        app.MapGet("/unify/download/{fileId}", async (HttpContext ctx, IUnifyUploads unifyUploads, string fileId) =>
+        {
+            var (stream, contentType, fileName) = await unifyUploads.DownloadFileAsync(fileId, ctx.RequestAborted);
+            return Results.File(stream, contentType, fileName);
+        }).WithName("UnifyDownload");
         
         return app;
     }

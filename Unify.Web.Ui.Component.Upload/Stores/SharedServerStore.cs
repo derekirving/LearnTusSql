@@ -23,8 +23,9 @@ public class SharedServerStore : ITusStore,
     private readonly IUnifyEncryption _encryption;
     private readonly string _uploadDirectory;
     private readonly DbConnectionFactory _dbConnectionFactory;
-    
-    public SharedServerStore(IConfiguration configuration, IUnifyEncryption encryption, string uploadDirectory, DbConnectionFactory dbConnectionFactory)
+
+    public SharedServerStore(IConfiguration configuration, IUnifyEncryption encryption, string uploadDirectory,
+        DbConnectionFactory dbConnectionFactory)
     {
         _configuration = configuration;
         _encryption = encryption;
@@ -41,69 +42,77 @@ public class SharedServerStore : ITusStore,
 
     private async Task InitializeDatabase()
     {
+        var randomLong = _encryption.NextRandom(1000, 5000);
+        var randomSeed = Convert.ToInt32(randomLong);
+        
         await using var conn = (DbConnection)_dbConnectionFactory.CreateConnection();
         await conn.OpenAsync();
-    
-        #if RELEASE
-        const string sql = """
 
-                                   IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'TusFiles')
-                                   BEGIN
-                                       CREATE TABLE TusFiles (
-                                           FileId NVARCHAR(50) PRIMARY KEY,
-                                           FileName NVARCHAR(50) NOT NULL,
-                                           UploadLength BIGINT NULL,
-                                           UploadOffset BIGINT NOT NULL DEFAULT 0,
-                                           Metadata NVARCHAR(MAX) NULL,
-                                           CreatedAt DATETIME2 NOT NULL,
-                                           ExpiresAt DATETIME2 NULL,
-                                           UploadConcat NVARCHAR(20) NULL,
-                                           PartialUploads NVARCHAR(MAX) NULL,
-                                           UploadId NVARCHAR(50) NULL,
-                                           ZoneId NVARCHAR(50) NULL,
-                                           AppId NVARCHAR(50) NULL,
-                                           IsCommitted BIT NOT NULL DEFAULT 0
-                                       );
-
-                                       CREATE INDEX IX_TusFiles_ExpiresAt ON TusFiles(ExpiresAt) WHERE ExpiresAt IS NOT NULL;
-                                       CREATE INDEX IX_TusFiles_UploadId ON TusFiles(UploadId, IsCommitted) WHERE UploadId IS NOT NULL;
-                                       CREATE INDEX IX_TusFiles_ZoneId ON TusFiles(ZoneId, IsCommitted) WHERE ZoneId IS NOT NULL;
-                                       CREATE INDEX IX_TusFiles_AppId ON TusFiles(AppId) WHERE AppId IS NOT NULL;
-                                       CREATE INDEX IX_TusFiles_Uncommitted ON TusFiles(CreatedAt) WHERE IsCommitted = 0;
-                                   END
-                                   ELSE IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('TusFiles') AND name = 'AppId')
-                                   BEGIN
-                                       ALTER TABLE TusFiles ADD AppId NVARCHAR(50) NULL;
-                                       CREATE INDEX IX_TusFiles_AppId ON TusFiles(AppId) WHERE AppId IS NOT NULL;
-                                   END
+#if RELEASE
+       var sql = $"""
+                                   IF NOT EXISTS (SELECT *
+                                      FROM sys.tables
+                                      WHERE name = 'TusFiles')
+                           BEGIN
+                               CREATE TABLE TusFiles
+                               (
+                                   Id             INT IDENTITY (1,1) PRIMARY KEY,
+                                   FileId         NVARCHAR(50),
+                                   FileName       NVARCHAR(50)  NOT NULL,
+                                   UploadLength   BIGINT        NULL,
+                                   UploadOffset   BIGINT        NOT NULL DEFAULT 0,
+                                   Metadata       NVARCHAR(MAX) NULL,
+                                   CreatedAt      DATETIME2     NOT NULL,
+                                   ExpiresAt      DATETIME2     NULL,
+                                   UploadConcat   NVARCHAR(20)  NULL,
+                                   PartialUploads NVARCHAR(MAX) NULL,
+                                   UploadId       NVARCHAR(50)  NULL,
+                                   ZoneId         NVARCHAR(50)  NULL,
+                                   AppId          NVARCHAR(50)  NULL,
+                                   IsCommitted    BIT           NOT NULL DEFAULT 0
+                               );
+                           
+                               CREATE INDEX IX_TusFiles_ExpiresAt ON TusFiles (ExpiresAt) WHERE ExpiresAt IS NOT NULL;
+                               CREATE INDEX IX_TusFiles_UploadId ON TusFiles (UploadId, IsCommitted) WHERE UploadId IS NOT NULL;
+                               CREATE INDEX IX_TusFiles_ZoneId ON TusFiles (ZoneId, IsCommitted) WHERE ZoneId IS NOT NULL;
+                               CREATE INDEX IX_TusFiles_AppId ON TusFiles (AppId) WHERE AppId IS NOT NULL;
+                               CREATE INDEX IX_TusFiles_Uncommitted ON TusFiles (CreatedAt) WHERE IsCommitted = 0;
+                           
+                               DBCC CHECKIDENT ('TusFiles', RESEED, {randomSeed});
+                           END
                            """;
-    
+
         await conn.ExecuteAsync(sql);
 #else
         var cmd = conn.CreateCommand();
-        cmd.CommandText = @"
-            CREATE TABLE IF NOT EXISTS TusFiles (
-    FileId TEXT PRIMARY KEY,
-    FileName TEXT NOT NULL,
-    UploadLength INTEGER,
-    UploadOffset INTEGER NOT NULL DEFAULT 0,
-    Metadata TEXT,
-    CreatedAt TEXT NOT NULL,
-    ExpiresAt TEXT,
-    UploadConcat TEXT,
+        cmd.CommandText = $"""
+            CREATE TABLE IF NOT EXISTS TusFiles
+(
+    Id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    FileId         TEXT,
+    FileName       TEXT    NOT NULL,
+    UploadLength   INTEGER,
+    UploadOffset   INTEGER NOT NULL DEFAULT 0,
+    Metadata       TEXT,
+    CreatedAt      TEXT    NOT NULL,
+    ExpiresAt      TEXT,
+    UploadConcat   TEXT,
     PartialUploads TEXT,
-    UploadId TEXT,
-    ZoneId TEXT,
-    AppId TEXT,
-    IsCommitted INTEGER NOT NULL DEFAULT 0
+    UploadId       TEXT,
+    ZoneId         TEXT,
+    AppId          TEXT,
+    IsCommitted    INTEGER NOT NULL DEFAULT 0
 );
 
-CREATE INDEX IF NOT EXISTS IX_TusFiles_ExpiresAt ON TusFiles(ExpiresAt);
-CREATE INDEX IF NOT EXISTS IX_TusFiles_UploadId ON TusFiles(UploadId, IsCommitted);
-CREATE INDEX IF NOT EXISTS IX_TusFiles_ZoneId ON TusFiles(ZoneId, IsCommitted);
-CREATE INDEX IF NOT EXISTS IX_TusFiles_AppId ON TusFiles(AppId);
-CREATE INDEX IF NOT EXISTS IX_TusFiles_Uncommitted ON TusFiles(CreatedAt);
-";
+INSERT OR REPLACE INTO sqlite_sequence (name, seq)
+VALUES ('TusFiles', {randomSeed});
+
+CREATE INDEX IF NOT EXISTS IX_TusFiles_ExpiresAt ON TusFiles (ExpiresAt);
+CREATE INDEX IF NOT EXISTS IX_TusFiles_UploadId ON TusFiles (UploadId, IsCommitted);
+CREATE INDEX IF NOT EXISTS IX_TusFiles_ZoneId ON TusFiles (ZoneId, IsCommitted);
+CREATE INDEX IF NOT EXISTS IX_TusFiles_AppId ON TusFiles (AppId);
+CREATE INDEX IF NOT EXISTS IX_TusFiles_Uncommitted ON TusFiles (CreatedAt);
+""";
         await cmd.ExecuteNonQueryAsync();
 #endif
     }
@@ -112,38 +121,32 @@ CREATE INDEX IF NOT EXISTS IX_TusFiles_Uncommitted ON TusFiles(CreatedAt);
 
     public async Task<string> CreateFileAsync(long uploadLength, string metadata, CancellationToken ct)
     {
-        var secret = _configuration["Unify:Secret"];
-        ArgumentException.ThrowIfNullOrEmpty(secret);
-        
         var encryptedAppId = metadata.GetMetaValue("appId");
         ArgumentException.ThrowIfNullOrEmpty(encryptedAppId);
-        
-        var appId = _encryption.Decrypt(encryptedAppId, secret);
+
+        var appId = _encryption.Decrypt(encryptedAppId);
 
         var zoneId = metadata.GetMetaValue("zoneId");
         ArgumentException.ThrowIfNullOrEmpty(zoneId);
-        
+
         var uploadId = metadata.GetMetaValue("uploadId");
         ArgumentException.ThrowIfNullOrEmpty(uploadId);
-        
+
         var fileName = metadata.GetMetaValue("name");
-        
+
         var fileId = Guid.NewGuid().ToString("N");
         var filePath = GetFilePath(fileId);
         // Create empty file (tus spec)
         await using (File.Create(filePath))
         {
-            
         }
 
         await using var conn = (DbConnection)_dbConnectionFactory.CreateConnection();
         await conn.OpenAsync(ct);
 
-        var sql = @"
-            INSERT INTO TusFiles (FileId, FileName, ZoneId, AppId, UploadId, UploadLength, UploadOffset, Metadata, CreatedAt)
-            VALUES (@FileId, @FileName, @ZoneId, @AppId, @UploadId, @UploadLength, 0, @Metadata, @CreatedAt)";
-
-        await conn.ExecuteAsync(sql, new
+        int id;
+        
+        var obj = new
         {
             FileId = fileId,
             FileName = fileName,
@@ -153,17 +156,39 @@ CREATE INDEX IF NOT EXISTS IX_TusFiles_Uncommitted ON TusFiles(CreatedAt);
             UploadLength = uploadLength,
             Metadata = metadata,
             CreatedAt = DateTime.UtcNow
-        });
+        };
+        
+        #if RELEASE
 
-        return fileId;
+        var sql = @"
+            INSERT INTO TusFiles (FileId, FileName, ZoneId, AppId, UploadId, UploadLength, UploadOffset, Metadata, CreatedAt)
+            VALUES (@FileId, @FileName, @ZoneId, @AppId, @UploadId, @UploadLength, 0, @Metadata, @CreatedAt);
+            SELECT CAST(SCOPE_IDENTITY() AS INT);";
+
+        id = await conn.QuerySingleAsync<int>(sql, obj);
+        
+        #else
+        var sql = @"
+            INSERT INTO TusFiles (FileId, FileName, ZoneId, AppId, UploadId, UploadLength, UploadOffset, Metadata, CreatedAt)
+            VALUES (@FileId, @FileName, @ZoneId, @AppId, @UploadId, @UploadLength, 0, @Metadata, @CreatedAt);
+            SELECT last_insert_rowid();";
+        
+        id = await conn.ExecuteScalarAsync<int>(sql, obj);
+        
+        #endif
+
+        var hashedFileId = _encryption.HashId(id);
+        return hashedFileId;
     }
 
     public async Task<string> GetUploadMetadataAsync(string fileId, CancellationToken ct)
     {
+        var id = _encryption.HashId(fileId);
+        
         await using var conn = (DbConnection)_dbConnectionFactory.CreateConnection();
 
-        var sql = "SELECT Metadata FROM TusFiles WHERE FileId = @FileId";
-        var result = await conn.QuerySingleOrDefaultAsync<string>(sql, new { FileId = fileId });
+        var sql = "SELECT Metadata FROM TusFiles WHERE Id = @Id";
+        var result = await conn.QuerySingleOrDefaultAsync<string>(sql, new { Id = id });
 
         return result ?? string.Empty;
     }
@@ -174,28 +199,34 @@ CREATE INDEX IF NOT EXISTS IX_TusFiles_Uncommitted ON TusFiles(CreatedAt);
 
     public async Task<bool> FileExistAsync(string fileId, CancellationToken ct)
     {
+        var id = _encryption.HashId(fileId);
+        
         await using var conn = (DbConnection)_dbConnectionFactory.CreateConnection();
 
-        var sql = "SELECT COUNT(*) FROM TusFiles WHERE FileId = @FileId";
-        var count = await conn.ExecuteScalarAsync<int>(sql, new { FileId = fileId });
+        var sql = "SELECT FileId FROM TusFiles WHERE Id = @Id";
+        var file = await conn.QuerySingleOrDefaultAsync<string>(sql, new { Id = id });
 
-        return count > 0 && File.Exists(GetFilePath(fileId));
+        return !string.IsNullOrEmpty(file) && File.Exists(GetFilePath(file));
     }
 
     public async Task<long?> GetUploadLengthAsync(string fileId, CancellationToken ct)
     {
+        var id = _encryption.HashId(fileId);
+        
         await using var conn = (DbConnection)_dbConnectionFactory.CreateConnection();
 
-        var sql = "SELECT UploadLength FROM TusFiles WHERE FileId = @FileId";
-        return await conn.QuerySingleOrDefaultAsync<long?>(sql, new { FileId = fileId });
+        var sql = "SELECT UploadLength FROM TusFiles WHERE Id = @Id";
+        return await conn.QuerySingleOrDefaultAsync<long?>(sql, new { Id = id });
     }
 
     public async Task<long> GetUploadOffsetAsync(string fileId, CancellationToken ct)
     {
+        var id = _encryption.HashId(fileId);
+        
         await using var conn = (DbConnection)_dbConnectionFactory.CreateConnection();
 
-        var sql = "SELECT UploadOffset FROM TusFiles WHERE FileId = @FileId";
-        var result = await conn.QuerySingleOrDefaultAsync<long?>(sql, new { FileId = fileId });
+        var sql = "SELECT UploadOffset FROM TusFiles WHERE Id = @Id";
+        var result = await conn.QuerySingleOrDefaultAsync<long?>(sql, new { Id = id });
 
         return result ?? 0;
     }
@@ -386,12 +417,12 @@ CREATE INDEX IF NOT EXISTS IX_TusFiles_Uncommitted ON TusFiles(CreatedAt);
     {
         var appId = metadata.GetMetaValue("appId");
         ArgumentException.ThrowIfNullOrEmpty(appId);
-        
+
         var zoneId = metadata.GetMetaValue("zoneId");
         ArgumentException.ThrowIfNullOrEmpty(zoneId);
-        
+
         var fileId = Guid.NewGuid().ToString("N");
-        
+
         var filePath = GetFilePath(fileId);
 
         // Concatenate partial files
@@ -438,10 +469,7 @@ CREATE INDEX IF NOT EXISTS IX_TusFiles_Uncommitted ON TusFiles(CreatedAt);
     public async Task<ITusFile?> GetFileAsync(string fileId, CancellationToken ct)
     {
         var exists = await FileExistAsync(fileId, ct);
-        if (!exists)
-            return null;
-
-        return new TusSqlServerFile(this, fileId, _uploadDirectory);
+        return !exists ? null : new TusSqlServerFile(this, fileId, _uploadDirectory);
     }
 
     #endregion
@@ -479,9 +507,12 @@ CREATE INDEX IF NOT EXISTS IX_TusFiles_Uncommitted ON TusFiles(CreatedAt);
     public async Task CommitFileAsync(string fileId, CancellationToken ct)
     {
         await using var conn = (DbConnection)_dbConnectionFactory.CreateConnection();
+        await conn.OpenAsync(ct);
 
-        var sql = "UPDATE TusFiles SET IsCommitted = 1 WHERE FileId = @FileId";
-        await conn.ExecuteAsync(sql, new { FileId = fileId });
+        var id = _encryption.HashId(fileId);
+
+        var sql = "UPDATE TusFiles SET IsCommitted = 1 WHERE Id = @Id";
+        await conn.ExecuteAsync(sql, new { Id = id });
     }
 
     public async Task<List<UnifyUploadFile>> GetFilesBySessionAsync(string uploadId, CancellationToken ct)
@@ -490,6 +521,7 @@ CREATE INDEX IF NOT EXISTS IX_TusFiles_Uncommitted ON TusFiles(CreatedAt);
 
         var sql = @"
         SELECT 
+            Id,
             FileId, 
             FileName, 
             ZoneId AS Zone, 
@@ -498,13 +530,17 @@ CREATE INDEX IF NOT EXISTS IX_TusFiles_Uncommitted ON TusFiles(CreatedAt);
         WHERE UploadId = @UploadId";
 
         var files = (await conn.QueryAsync(sql, new { UploadId = uploadId }))
-            .Select(row => new UnifyUploadFile
+            .Select(row =>
             {
-                FileId = row.FileId,
-                FileName = row.FileName,
-                Zone = row.Zone,
-                Size = (int)row.Size,
-                Uri = new Uri($"https://domain.com/{row.FileId}")
+                var hashedId = _encryption.HashId(row.Id);
+                return new UnifyUploadFile
+                {
+                    FileId = hashedId,
+                    FileName = row.FileName,
+                    Zone = row.Zone,
+                    Size = (int)row.Size,
+                    Uri = new Uri($"https://domain.com/{hashedId}")
+                };
             })
             .ToList();
 
@@ -535,11 +571,13 @@ CREATE INDEX IF NOT EXISTS IX_TusFiles_Uncommitted ON TusFiles(CreatedAt);
 
         return count;
     }
-    
+
     public async Task<TusFileInfo?> GetFileInfoAsync(string fileId, CancellationToken ct)
     {
+        var id = _encryption.HashId(fileId);
+        
         await using var conn = (DbConnection)_dbConnectionFactory.CreateConnection();
-    
+
         var sql = @"
         SELECT 
             FileId,
@@ -552,13 +590,14 @@ CREATE INDEX IF NOT EXISTS IX_TusFiles_Uncommitted ON TusFiles(CreatedAt);
             AppId,
             IsCommitted
         FROM TusFiles 
-        WHERE FileId = @FileId";
-    
-        var fi = await conn.QuerySingleOrDefaultAsync<TusFileInfo>(sql, new { FileId = fileId });
+        WHERE Id = @Id";
+
+        var fi = await conn.QuerySingleOrDefaultAsync<TusFileInfo>(sql, new { Id = id });
         if (fi == null) return null;
-        
+
+        fi.FileId = fileId;
         fi.FileName = fi.Metadata.GetMetaValue("name");
-        
+
         return fi;
     }
 
@@ -597,7 +636,9 @@ CREATE INDEX IF NOT EXISTS IX_TusFiles_Uncommitted ON TusFiles(CreatedAt);
             var metadataString = await _store.GetUploadMetadataAsync(_fileId, ct);
 
             if (string.IsNullOrWhiteSpace(metadataString))
+            {
                 return new Dictionary<string, tusdotnet.Models.Metadata>();
+            }
 
             return tusdotnet.Models.Metadata.Parse(metadataString);
         }

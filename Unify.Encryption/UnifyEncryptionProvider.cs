@@ -1,19 +1,20 @@
+#nullable enable
+using System;
 using Microsoft.Extensions.Configuration;
-using Unify.Encryption;
 
-namespace Unify.Web.Ui.Component.Upload;
+namespace Unify.Encryption;
 
 public static class UnifyEncryptionProvider
 {
     private static UnifyEncryption? _instance;
     private static readonly object Lock = new();
 
-    public static void Initialise(IConfiguration configuration)
+    public static void Initialise(IConfiguration configuration, bool useSharedSecret = false)
     {
         if (_instance != null) return;
         lock (Lock)
         {
-            _instance ??= new UnifyEncryption(configuration);
+            _instance ??= new UnifyEncryption(configuration, useSharedSecret);
         }
     }
 

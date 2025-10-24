@@ -1,3 +1,4 @@
+using Unify.Encryption;
 using Unify.Web.Ui.Component.Upload.Stores;
 
 namespace Unify.Uploads.Api;
@@ -91,7 +92,7 @@ public static class EndPoints
                 var metadata = await file.GetMetadataAsync(ct);
 
                 var filename = "download";
-                if (metadata.TryGetValue("filename", out var filenameMetadata))
+                if (metadata.TryGetValue("name", out var filenameMetadata))
                 {
                     filename = filenameMetadata.GetString(System.Text.Encoding.UTF8);
                 }
