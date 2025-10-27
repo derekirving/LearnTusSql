@@ -1,18 +1,38 @@
+using Serilog;
 using Unify;
+using Unify.Logging;
 using Unify.Web.Ui.Component.Upload;
 using WebApp.Data;
 
-var builder = WebApplication.CreateBuilder(args);
-builder.Host.AddUnifyConfiguration("TestApp-123");
-builder.AddUnifyUploads("TestApp-123");
+ILogger<Program>? logger = null;
 
-builder.Services
-    .AddDbContext<AppDbContext>()
-    .AddRazorPages();
+try
+{
+    var builder = WebApplication.CreateBuilder(args);
+    using var factory = builder.Host.AddUnifyLogging();
+    logger = factory.CreateLogger<Program>();
 
-var app = builder.Build();
+    builder.Host.AddUnifyConfiguration("TestApp-123");
+    builder.AddUnifyUploads("TestApp-123");
 
-app.UseStaticFiles();
-app.MapRazorPages();
-app.MapUnifyUploads(true);
-app.Run();
+    builder.Services
+        .AddDbContext<AppDbContext>()
+        .AddRazorPages();
+
+    var app = builder.Build();
+
+    app.UseStaticFiles();
+    app.MapRazorPages();
+    app.MapUnifyUploads();
+    app.Run();
+}
+catch (Exception ex)
+{
+    logger?.LogCritical(ex, "Host for UnifyWebApp terminated unexpectedly");
+    Console.WriteLine(ex.Message);
+}
+finally
+{
+    logger?.LogInformation("Shutdown of UnifyWebApp complete");
+    Log.CloseAndFlush();
+}
