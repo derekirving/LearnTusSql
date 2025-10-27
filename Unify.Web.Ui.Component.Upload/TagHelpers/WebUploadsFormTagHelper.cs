@@ -42,7 +42,7 @@ public class WebUploadsFormTagHelper : TagHelper
         }
         
         const string name = $"{nameof(IUnifyUploadSession.UploadSession)}.{nameof(UnifyUploadSession.Id)}";
-        var hiddenInput = $"<input class='{UploadConstants.UnifyAppId}' type=\"hidden\" name=\"{name}\" value=\"{value}\" />";
+        var hiddenInput = $"<input class=\"unify-upload-session-id\" type=\"hidden\" name=\"{name}\" value=\"{value}\" />";
         output.PostContent.AppendHtml(hiddenInput);
     }
 }

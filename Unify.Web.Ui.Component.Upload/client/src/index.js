@@ -183,12 +183,12 @@ const uploadsInit = () => {
     const performUpload = (form, submitBtn, zone, files, event) => {
         console.log("performUpload", form, submitBtn, zone, files, event);
 
-        const appIdElem = form.querySelector('.unify-app-id');
-        if(!appIdElem){
-            throw new Error("Unable to find unify app id on form");
+        const sessionIdElem = form.querySelector('.unify-upload-session-id');
+        if(!sessionIdElem){
+            throw new Error("Unable to find unify upload session id on form");
         }
 
-        const uploadId = appIdElem.value || appIdElem.getAttribute('value');
+        const uploadId = sessionIdElem.value || sessionIdElem.getAttribute('value');
 
         zone.classList.add('is-uploading');
         
