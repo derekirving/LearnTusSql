@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,6 +31,13 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IUnifyUploads, UnifyUploads>();
         services.AddTransient<ITagHelperComponent, WebUploadsTagHelperComponent>();
 
+        // This isn't necessary, just testing
+        services.AddSingleton<
+            ITagHelperInitializer<WebUploadsTagHelper>
+        >(new WebUploadsTagHelperInitialiser(
+            typeof(WebUploadsTagHelperInitialiser).Assembly.GetName().Version?.ToString() ?? "unknown"
+        ));
+        
         // ReSharper disable once ConvertToConstant.Local
         // ReSharper disable once RedundantAssignment
         var baseUrl = "/";
@@ -68,13 +76,13 @@ public static class ServiceCollectionExtensions
         {
             var secret = configuration["Unify:Secret"];
             ArgumentException.ThrowIfNullOrEmpty(secret);
-            
+
             client.DefaultRequestHeaders.Add(UploadConstants.ApiKeyHeaderName, secret);
             client.DefaultRequestHeaders.Add(UploadConstants.UnifyAppIdHeaderName, encryptedId);
             client.BaseAddress = new Uri(baseUrl);
             client.Timeout = TimeSpan.FromMinutes(timeoutMinutes);
         });
-        
+
         services.AddTransient<IUnifyUploadsClient>(sp => sp.GetRequiredService<UnifyUploadsClient>());
 #endif
         return services;
