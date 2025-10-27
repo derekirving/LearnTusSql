@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "webpack --mode=development  --watch --progress",
     "build": "webpack --mode=development",
-    "dist": "webpack --mode=production",
+    "dist": "webpack --mode=development && webpack --mode=production",
     "update-all": "npx -p npm-check-updates ncu -u && npm install"
   },
   "keywords": [],

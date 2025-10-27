@@ -14,5 +14,5 @@ var app = builder.Build();
 
 app.UseStaticFiles();
 app.MapRazorPages();
-app.MapUnifyUploads();
+app.MapUnifyUploads(true);
 app.Run();

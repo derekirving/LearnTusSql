@@ -6,4 +6,6 @@ public static class UploadConstants
     public const string ApiKeySectionName = "Unify:secret";
     public const string ApiKeyHeaderName = "X-Api-Key";
     public const string UnifyAppIdHeaderName = "X-Unify-AppId";
+    public const string UploadsEventLogger = "Unify.Uploads";
+    public const string NameSpace = "Unify.Web.Ui.Component.Upload";
 }

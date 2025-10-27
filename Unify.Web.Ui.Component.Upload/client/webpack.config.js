@@ -10,11 +10,9 @@ module.exports = (env, options) => {
             upload: './src/index.js',
         },
         output: {
-            //path: path.resolve(__dirname, '..', 'Files'),
-            path: path.resolve(__dirname, '..', '..', 'WebApp', 'wwwroot', 'cmpnt'),
+            path: path.resolve(__dirname, '..', 'Files'),
             publicPath: './',
-            filename: isProduction? 'upload.min.js' : 'upload.js',
-            //chunkFilename: '[name].chunk.js'
+            filename: isProduction? 'upload.min.js' : 'upload.js'
         },
         module: {
             rules: [
@@ -27,13 +25,13 @@ module.exports = (env, options) => {
                     use: [
                         MiniCssExtractPlugin.loader,
                         {
-                            loader: 'css-loader', // translates CSS into CommonJS modules
+                            loader: 'css-loader',
                         },
                         {
-                            loader: 'postcss-loader' // Run postcss actions
+                            loader: 'postcss-loader'
                         },
                         {
-                            loader: 'sass-loader' // compiles Sass to CSS
+                            loader: 'sass-loader'
                         }]
                 },
                 {
@@ -53,13 +51,11 @@ module.exports = (env, options) => {
             ]
         },
         optimization: {
-            //usedExports: true,
             minimizer: [
                 new CssMinimizerPlugin({
                     parallel: true
                 }),
                 new TerserWebpackPlugin({
-                    //test: /\.js(\?.*)?$/i,
                     terserOptions: {
                         sourceMap: true,
                         output: {

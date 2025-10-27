@@ -20,8 +20,4 @@
         <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite"/>
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="App_Data\" />
-    </ItemGroup>
-
 </Project>

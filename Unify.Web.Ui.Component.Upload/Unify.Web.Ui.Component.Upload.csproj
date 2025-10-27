@@ -26,7 +26,12 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Unify.Encryption\Unify.Encryption.csproj" />
+        <ProjectReference Include="..\Unify.Logging\Unify.Logging.csproj" />
         <ProjectReference Include="..\Unify.Validation\Unify.Validation.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Include="Files\**" Exclude="Files\**\*.map" />
     </ItemGroup>
 
 </Project>
