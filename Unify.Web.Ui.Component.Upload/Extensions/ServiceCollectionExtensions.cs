@@ -69,8 +69,8 @@ public static class ServiceCollectionExtensions
             var secret = configuration["Unify:Secret"];
             ArgumentException.ThrowIfNullOrEmpty(secret);
             
-            client.DefaultRequestHeaders.Add(AuthConstants.ApiKeyHeaderName, secret);
-            client.DefaultRequestHeaders.Add(AuthConstants.UnifyAppIdHeaderName, encryptedId);
+            client.DefaultRequestHeaders.Add(UploadConstants.ApiKeyHeaderName, secret);
+            client.DefaultRequestHeaders.Add(UploadConstants.UnifyAppIdHeaderName, encryptedId);
             client.BaseAddress = new Uri(baseUrl);
             client.Timeout = TimeSpan.FromMinutes(timeoutMinutes);
         });

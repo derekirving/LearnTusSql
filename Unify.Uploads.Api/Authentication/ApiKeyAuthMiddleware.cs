@@ -18,7 +18,7 @@ public class ApiKeyAuthMiddleware(RequestDelegate next, IConfiguration configura
             return;
         }
 
-        var apiKey = configuration.GetValue<string>(AuthConstants.ApiKeySectionName) ?? "";
+        var apiKey = configuration.GetValue<string>(UploadConstants.ApiKeySectionName) ?? "";
 
         if (string.IsNullOrWhiteSpace(apiKey))
         {
@@ -27,14 +27,14 @@ public class ApiKeyAuthMiddleware(RequestDelegate next, IConfiguration configura
             return;
         }
 
-        if (!context.Request.Headers.TryGetValue(AuthConstants.UnifyAppIdHeaderName, out _))
+        if (!context.Request.Headers.TryGetValue(UploadConstants.UnifyAppIdHeaderName, out _))
         {
             context.Response.StatusCode = 401;
             await context.Response.WriteAsync("Unify App Id missing.");
             return;
         }
 
-        if (!context.Request.Headers.TryGetValue(AuthConstants.ApiKeyHeaderName, out var extractedKey))
+        if (!context.Request.Headers.TryGetValue(UploadConstants.ApiKeyHeaderName, out var extractedKey))
         {
             context.Response.StatusCode = 401;
             await context.Response.WriteAsync("API Key missing.");

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.Extensions.Options;
+using Unify.Web.Ui.Component.Upload.Constants;
 using Unify.Web.Ui.Component.Upload.Models;
 
 namespace Unify.Web.Ui.Component.Upload.TagHelpers;
@@ -16,10 +17,17 @@ public class WebUploadsTagHelperComponent(IOptions<UnifyUploadOptions> options) 
             output.PostContent.AppendHtml("<!-- Unify Uploads running in DEBUG mode -->" + Environment.NewLine);
 #endif
             var baseUrl = options.Value.BaseUrl;
-            output.PostContent.AppendHtml($"<meta name=\"unify-upload-baseUrl\" content=\"{baseUrl}\" />{Environment.NewLine}");
+            output.PostContent.AppendHtml($"{Environment.NewLine}\t<meta name=\"unify-upload-baseUrl\" content=\"{baseUrl}\" />");
             
-            var encryptedId = options.Value.EncryptedAppId;
-            output.PostContent.AppendHtml($"<meta name=\"unify-upload-id\" content=\"{encryptedId}\" />{Environment.NewLine}");
+            //var encryptedId = options.Value.EncryptedAppId;
+            //output.PostContent.AppendHtml($"<meta name=\"unify-upload-id\" content=\"{encryptedId}\" />{Environment.NewLine}");
+            
+            var postContentString = output.PostContent.GetContent();
+            if (!postContentString.Contains($"name=\"{UploadConstants.UnifyAppId}\"", StringComparison.OrdinalIgnoreCase))
+            {
+                var encryptedId = options.Value.EncryptedAppId;
+                output.PostContent.AppendHtml($"{Environment.NewLine}\t<meta name=\"{UploadConstants.UnifyAppId}\" content=\"{encryptedId}\">{Environment.NewLine}");
+            }
         }
         
         await base.ProcessAsync(context, output);

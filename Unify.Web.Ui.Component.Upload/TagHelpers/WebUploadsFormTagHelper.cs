@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Unify.Web.Ui.Component.Upload.Constants;
 using Unify.Web.Ui.Component.Upload.Interfaces;
 using Unify.Web.Ui.Component.Upload.Models;
 
@@ -41,7 +42,7 @@ public class WebUploadsFormTagHelper : TagHelper
         }
         
         const string name = $"{nameof(IUnifyUploadSession.UploadSession)}.{nameof(UnifyUploadSession.Id)}";
-        var hiddenInput = $"<input class='unify-upload-id' type=\"hidden\" name=\"{name}\" value=\"{value}\" />";
+        var hiddenInput = $"<input class='{UploadConstants.UnifyAppId}' type=\"hidden\" name=\"{name}\" value=\"{value}\" />";
         output.PostContent.AppendHtml(hiddenInput);
     }
 }

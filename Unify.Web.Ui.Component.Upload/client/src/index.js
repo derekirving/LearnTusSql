@@ -15,9 +15,9 @@ const uploadsInit = () => {
         baseUrl = '';
     }
 
-    const APP_ID = document.querySelector('meta[name="unify-upload-id"]')?.getAttribute('content');
+    const APP_ID = document.querySelector('meta[name="unify-app-id"]')?.getAttribute('content');
     if (!APP_ID) {
-        throw new Error('No \"unify-upload-id\" meta tag found on html');
+        throw new Error('No \"unify-app-id\" meta tag found on html');
     }
 
     const ENDPOINT = `${baseUrl}/unify/uploads/`;
@@ -183,12 +183,12 @@ const uploadsInit = () => {
     const performUpload = (form, submitBtn, zone, files, event) => {
         console.log("performUpload", form, submitBtn, zone, files, event);
 
-        const uploadIdElem = form.querySelector('.unify-upload-id');
-        if(!uploadIdElem){
-            throw new Error("Unable to find unify upload id on form");
+        const appIdElem = form.querySelector('.unify-app-id');
+        if(!appIdElem){
+            throw new Error("Unable to find unify app id on form");
         }
 
-        const uploadId = uploadIdElem.value || uploadIdElem.getAttribute('value');
+        const uploadId = appIdElem.value || appIdElem.getAttribute('value');
 
         zone.classList.add('is-uploading');
         
