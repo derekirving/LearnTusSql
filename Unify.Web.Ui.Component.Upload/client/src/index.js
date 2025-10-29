@@ -151,33 +151,58 @@ const uploadsInit = () => {
 
         zone.dataset.fileCount--;
 
-        if (form.classList.contains('submit-after-unify-uploads')) {
-            zone.classList.add('is-success');
-        }else{
-            submitBtn.disabled = false;
-        }
-        
         zone.classList.remove('is-uploading');
         zone.classList.remove('is-error');
 
-        const fileInput = form.querySelector('input[type="file"]');
-        if (fileInput) fileInput.value = '';
-
         const fileId = url.split("/").pop();
-        
-        appendHidden(form, `${dto}[${count}].FileId`, fileId);
-        appendHidden(form, `${dto}[${count}].FileName`, file.name);
-        appendHidden(form, `${dto}[${count}].Size`, file.size);
-        appendHidden(form, `${dto}[${count}].Uri`, url);
-        appendHidden(form, `${dto}[${count}].Zone`, zone.dataset.zone);
 
-        document.dispatchEvent(new CustomEvent('unify-upload-success', {
-            detail: {form, zone: zone.dataset.zone, fileId, url, contentLocation, event},
-        }));
+        if (form.classList.contains('submit-after-unify-uploads')) {
+            
+            zone.classList.add('is-success');
 
-        if (parseInt(zone.dataset.fileCount, 10) === 0) {
-            performSubmit(form, submitBtn, true, event);
+            const fileInput = form.querySelector('input[type="file"]');
+            if (fileInput) fileInput.value = '';
+
+            appendHidden(form, `${dto}[${count}].FileId`, fileId);
+            appendHidden(form, `${dto}[${count}].FileName`, file.name);
+            appendHidden(form, `${dto}[${count}].Size`, file.size);
+            appendHidden(form, `${dto}[${count}].Uri`, url);
+            appendHidden(form, `${dto}[${count}].Zone`, zone.dataset.zone);
+
+            if (parseInt(zone.dataset.fileCount, 10) === 0) {
+                performSubmit(form, submitBtn, true, event);
+            }
+        }else{
+            resetZone(zone);
         }
+        
+        document.dispatchEvent(new CustomEvent('unify-upload-success', {
+            //detail: {form, zone: zone.dataset.zone, fileId, url, contentLocation, event},
+            detail: {zone: zone.dataset.zone, fileId, contentLocation}
+        }));
+    }
+    
+    const resetZone = (zone) => {
+        
+        console.log("reset zone", zone);
+
+        const submitBtn= zone.parentNode.querySelector('input[type="submit"], button[type="submit"]');
+        console.log("remove", zone, submitBtn);
+        submitBtn.disabled = false;
+        zone.querySelector('.fileList').innerHTML = '';
+        const progress = zone.querySelector('.progress');
+        progress.style.width = '0%';
+        progress.textContent = '';
+
+        const labelElement = zone.querySelector(`label[for="file_${zone.dataset.zone}"]`);
+
+        console.log(labelElement);
+
+        ['.text-label', '.text-choose', '.text-drag'].forEach(cls => {
+            const elem = labelElement.querySelector(cls);
+            console.log(cls, elem)
+            elem.style.display = 'inline-block';
+        });
     }
 
     const performUpload = (form, submitBtn, zone, files, event) => {
@@ -321,12 +346,22 @@ const uploadsInit = () => {
             }
         }
         const updateUI = () => {
+            
+            console.log("updateUI", selectedFiles.length, label);
             input.disabled = selectedFiles.length === maxFiles;
             label.style.cursor = input.disabled ? 'not-allowed' : 'pointer';
             zone.style.cursor = input.disabled ? 'no-drop' : 'default';
 
             if (!fileList) return;
+
+            // Remove all child nodes and their listeners...
+            while (fileList.firstChild) {
+                fileList.removeChild(fileList.firstChild);
+            }
+            
+            // ...although doing this in a modern browser is probably sufficient
             fileList.innerHTML = '';
+            
             const ul = document.createElement('ul');
             selectedFiles.forEach((file, idx) => {
                 const li = document.createElement('li');
@@ -347,9 +382,24 @@ const uploadsInit = () => {
 
             zone.dataset.fileCount = selectedFiles.length.toString();
             const totalSizeKB = (selectedFiles.reduce((sum, file) => sum + file.size, 0) / 1024).toFixed(1);
-            label.innerHTML = `${selectedFiles.length} file${selectedFiles.length === 1 ? '' : 's'} selected (${totalSizeKB} KB)`;
-            if (maxFiles > 1 && selectedFiles.length < maxFiles) {
-                label.innerHTML += " <span><strong>Choose more</strong></span>";
+            
+            const textLabelElem = label.querySelector('.text-label');
+            const textChooseElem = label.querySelector('.text-choose');
+            const textDragElem = label.querySelector('.text-drag');
+            
+            textLabelElem.innerHTML = `${selectedFiles.length} file${selectedFiles.length === 1 ? '' : 's'} selected (${totalSizeKB} KB)`;
+
+            if(selectedFiles.length === 0) {
+                textLabelElem.innerHTML = decodeURIComponent(textLabelElem.dataset.text.replace(/\+/g, ' '));
+                textChooseElem.style.display = 'inline-block';
+                textDragElem.style.display = 'inline-block';
+            }else {
+                if (maxFiles > 1 && selectedFiles.length < maxFiles) {
+                    textLabelElem.innerHTML += " <span><strong>Choose more</strong></span>";
+                } else {
+                    textChooseElem.style.display = 'none';
+                    textDragElem.style.display = 'none';
+                }
             }
             document.dispatchEvent(new CustomEvent('unify-upload-files-changed', {
                 detail: {zone: zoneId, count: selectedFiles.length},

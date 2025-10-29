@@ -207,7 +207,11 @@ public class WebUploadsTagHelper(
             
             previousFiles = sb.ToString();
         }
-
+        
+        var encodedTextChoose = System.Net.WebUtility.UrlEncode(textChoose);
+        var encodedTextDrag = System.Net.WebUtility.UrlEncode(textDrag);
+        var encodedTextLabel = System.Net.WebUtility.UrlEncode(textLabel);
+        
         var html = $$"""
                              <div class="{{useClass}}" data-version="{{Version}}" data-zone="{{Zone}}" data-dto="UploadSession.Files" data-accepted="{{displayAcceptedFileTypes}}" data-max-files="{{maxFiles}}" data-min-files="{{minFiles}}" data-max-file-size="{{maxSize}}" data-file-count="{{uploads?.Count ?? 0}}">
                                  <div class="zone__input">
@@ -215,8 +219,13 @@ public class WebUploadsTagHelper(
                                          <path d="M48.4 26.5c-.9 0-1.7.7-1.7 1.7v11.6h-43.3v-11.6c0-.9-.7-1.7-1.7-1.7s-1.7.7-1.7 1.7v13.2c0 .9.7 1.7 1.7 1.7h46.7c.9 0 1.7-.7 1.7-1.7v-13.2c0-1-.7-1.7-1.7-1.7zm-24.5 6.1c.3.3.8.5 1.2.5.4 0 .9-.2 1.2-.5l10-11.6c.7-.7.7-1.7 0-2.4s-1.7-.7-2.4 0l-7.1 8.3v-25.3c0-.9-.7-1.7-1.7-1.7s-1.7.7-1.7 1.7v25.3l-7.1-8.3c-.7-.7-1.7-.7-2.4 0s-.7 1.7 0 2.4l10 11.6z"/>
                                      </svg>
                                      <div class="fileList">{{fileListHtml}}</div>
-                                     <input type="file" name="files[]" id="file_{{Zone}}" class="zone__file" data-multiple-caption="{count} files selected" multiple />
-                                     <label for="file_{{Zone}}"><strong>{{textChoose}}</strong><span class="zone__dragndrop"> {{textDrag}}</span><br/>{{textLabel}}</label>
+                                     <input type="file" name="files[]" id="file_{{Zone}}" class="zone__file" data-multiple-caption="{count} files selected"{{(isMultiple ? " multiple" : "")}} />
+                                     <label for="file_{{Zone}}">
+                                         <strong data-text="{{encodedTextChoose}}" class="text-choose">{{textChoose}}</strong>
+                                         <span data-text="{{encodedTextDrag}}" class="zone__dragndrop text-drag"> {{textDrag}}</span>
+                                         <br/>
+                                         <span data-text="{{encodedTextLabel}}" class="text-label">{{textLabel}}</span>
+                                     </label>
                                      {{previousFiles}}
                                  </div>
                                  <div class="zone__uploading">

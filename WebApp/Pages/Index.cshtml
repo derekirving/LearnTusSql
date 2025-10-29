@@ -30,7 +30,13 @@
 
 <hr/>
 
-<p>https://github.com/fiduswriter/simple-datatables</p>
+<form submit-after-unify-uploads="false">
+    <unify-web-upload zone="CallbackZone" link-files="false"/>
+    <button type="submit" id="btn-callback" class="btn btn-primary">Callback</button>
+</form>
+
+
+<p>https://github.com/fiduswriter/simple-datatables with PicoCss</p>
 
 @if (Model.Posts != null)
 {
@@ -47,6 +53,13 @@
             </p>
     }
 }
+
+<script>
+    document.addEventListener('unify-upload-success', function(e) {
+        const { zone, fileId, contentLocation, } = e.detail;
+        console.log('Index.cshtml Upload succeeded:', { zone, fileId, contentLocation });
+    });
+</script>
 
 </body>
 </html>

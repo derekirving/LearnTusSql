@@ -57,7 +57,7 @@ public sealed class TusConfigurationFactory : ITusConfigurationFactory
                     //     await store.SetAppIdAsync(file.Id, appId, ctx.CancellationToken);
                     // }
 
-                    var endPoint = $"{ctx.HttpContext.Request.PathBase}/unify/uploads/{ctx.FileId}";
+                    var endPoint = $"{ctx.HttpContext.Request.PathBase}/unify/download/{ctx.FileId}";
                     ctx.HttpContext.Response.Headers.Append("Content-Location", endPoint);
 
                     var logger = ctx.HttpContext.RequestServices.GetRequiredService<ILogger<TusConfigurationFactory>>();
